@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Previous Year Papers — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">PYQ Papers</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">Previous Year Question Papers</h2>
+            <p class="text-muted small mb-0">Original university semester exam papers with marks distribution and extracted solutions</p>
+        </div>
+        <a href="{% url 'pyqs:important' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-star me-1 text-warning"></i> High-Yield Questions
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <form class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-gray" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="subject" class="form-select form-select-sm">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="year" class="form-select form-select-sm">
+                    <option value="">All Exam Years</option>
+                    {% for y in years %}
+                    <option value="{{ y }}">{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="exam_type" class="form-select form-select-sm">
+                    <option value="">All Exam Types</option>
+                    {% for value, label in exam_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-filter me-1"></i> Filter Papers
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Papers Grid -->
+    <div class="row g-4">
+        {% for paper in papers %}
+        {% cycle 'surface-yellow' 'surface-peach' 'surface-sage' 'surface-lavender' as paper_surface %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge {{ paper_surface }} text-dark">{{ paper.year }}</span>
+                        <span class="badge bg-secondary font-monospace">{{ paper.subject.subject_code }}</span>
+                    </div>
+
+                    <h5 class="fw-bold mb-1">{{ paper.subject.name }}</h5>
+                    <p class="text-muted small mb-2">{{ paper.get_exam_type_display }} Examination</p>
+
+                    <div class="p-2 rounded-2 surface-gray mb-3 small text-dark d-flex align-items-center gap-2">
+                        <i class="fas fa-list-ol text-dark"></i>
+                        <span><strong>{{ paper.questions.count }}</strong> extracted questions available</span>
+                    </div>
+
+                    <div class="mt-auto pt-3 border-top d-flex gap-2">
+                        <a href="{% url 'pyqs:paper_detail' paper.id %}" class="btn btn-primary btn-sm flex-grow-1">
+                            View Questions <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                        {% if paper.pdf_file %}
+                        <a href="{{ paper.pdf_file.url }}" target="_blank" class="btn btn-secondary btn-sm" title="Download Original PDF">
+                            <i class="fas fa-file-pdf text-danger"></i> PDF
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="edu-empty-state">
+                <div class="edu-empty-icon">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <h5 class="fw-bold">No question papers found</h5>
+                <p class="text-muted small mb-0">Past papers matching your query are currently being archived.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

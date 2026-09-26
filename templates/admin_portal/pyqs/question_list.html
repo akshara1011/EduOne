@@ -1,0 +1,116 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}PYQ Questions Repository{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Individual PYQ Exam Questions</h1>
+            <p class="text-secondary small mb-0">Deconstructed questions with marks, repetition frequency, and model solutions.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:question_create' %}{% if paper_id %}?paper={{ paper_id }}{% endif %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Question
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter by Paper -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <select name="paper" class="form-select">
+                    <option value="">All Question Papers (Showing all questions)</option>
+                    {% for p in papers %}
+                        <option value="{{ p.id }}" {% if paper_id|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>
+                            {{ p.subject.subject_code }} — {{ p.year }} {{ p.get_exam_type_display }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-admin-primary flex-grow-1">Filter</button>
+                {% if paper_id %}
+                    <a href="{% url 'admin_portal:question_list' %}" class="btn btn-light border">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Paper &amp; Unit</th>
+                        <th>Type &amp; Marks</th>
+                        <th>Importance &amp; Repeats</th>
+                        <th>Solution</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in page_obj %}
+                    <tr>
+                        <td style="max-width: 380px;">
+                            <div class="fw-semibold text-dark">{{ q.question_text }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ q.paper.subject.subject_code }} ({{ q.paper.year }})</div>
+                            {% if q.unit %}
+                                <div class="text-secondary small">Unit {{ q.unit.unit_number }}: {{ q.unit.name }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ q.get_question_type_display }}</span>
+                            <div class="text-primary fw-bold small mt-1">{{ q.marks }} Marks</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fw-bold">Score: {{ q.importance_score }}</span>
+                            <div class="text-muted small mt-1">Repeated {{ q.frequency_count }}x</div>
+                        </td>
+                        <td>
+                            {% if q.solution_text %}
+                                <span class="badge bg-success-subtle text-success"><i class="fas fa-check me-1"></i> Available</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">Unsolved</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:question_edit' pk=q.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:question_delete' pk=q.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No questions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if paper_id %}&paper={{ paper_id }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if paper_id %}&paper={{ paper_id }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

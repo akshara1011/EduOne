@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Practice Quizzes &amp; Mock Tests — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Practice &amp; Mock Tests 🧠</h2>
+            <p class="text-muted small mb-0">Evaluate your understanding with syllabus-aligned topic MCQs and timed exams</p>
+        </div>
+        <a href="{% url 'quizzes:my_attempts' %}" class="btn btn-secondary btn-sm">
+            My Attempt History →
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <form class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-sage" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-lg-3">
+                <input name="q" value="{{ search_q|default:'' }}" class="form-control form-control-sm" placeholder="Search quiz by title...">
+            </div>
+            <div class="col-lg-3">
+                <select name="subject" class="form-select form-select-sm">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select name="difficulty" class="form-select form-select-sm">
+                    <option value="">All Difficulties</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="mixed">Mixed</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    <option value="topic">Topic</option>
+                    <option value="unit">Unit</option>
+                    <option value="subject">Subject Mock</option>
+                    <option value="full">Full Semester</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    Filter Quizzes
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Quizzes Grid -->
+    <div class="row g-4">
+        {% for item in quizzes_with_status %}
+        {% with quiz=item.quiz %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-secondary font-monospace">{{ quiz.get_quiz_type_display }}</span>
+                            <span class="badge bg-light text-muted">{{ quiz.get_difficulty_display }}</span>
+                        </div>
+
+                        <span class="text-muted small fw-semibold d-block mb-1" style="font-size: 0.76rem; text-transform: uppercase;">Practice Quiz</span>
+                        <h4 class="fw-bold mb-1 text-dark">{{ quiz.title }}</h4>
+                        <p class="text-muted small mb-3">
+                            {{ quiz.subject.name }}
+                            {% if quiz.unit %} &bull; Unit {{ quiz.unit.unit_number }}{% endif %}
+                            {% if quiz.topic %} &bull; {{ quiz.topic.name }}{% endif %}
+                        </p>
+
+                        <!-- Exam Stats Strip -->
+                        <div class="d-flex align-items-center gap-3 text-muted small my-3 py-2 border-top border-bottom">
+                            <span><strong>{{ quiz.question_count }}</strong> Questions</span>
+                            <span>&bull;</span>
+                            <span><strong>{{ quiz.time_limit_minutes }}</strong> Minutes</span>
+                            <span>&bull;</span>
+                            <span><strong>{{ quiz.total_marks }}</strong> Marks</span>
+                        </div>
+
+                        {% if item.attempted %}
+                        <div class="alert {% if item.passed %}alert-success{% else %}alert-warning{% endif %} py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
+                            <span>Previous Best Score</span>
+                            <strong>{{ item.best_score }}%</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-2">
+                        <a href="{% url 'quizzes:detail' quiz.id %}" class="btn btn-primary w-100">
+                            Start Quiz →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="col-12">
+            <div class="edu-empty-state">
+                <div class="edu-empty-icon">
+                    🧠
+                </div>
+                <h5 class="fw-bold">No quizzes available for this query</h5>
+                <p class="text-muted small mb-0">Check back soon as new practice quizzes are being added.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

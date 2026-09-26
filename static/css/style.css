@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════
+   ErVeda — Global Stylesheet
+   B.Tech AI Learning Platform
+═══════════════════════════════════════════════════ */
+
+:root {
+    --primary: #0d6efd;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --dark: #212529;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #f5f7fa;
+    color: #2d3748;
+    font-size: 15px;
+}
+
+/* ──────── Typography ──────── */
+h1, h2, h3, h4, h5, h6 { font-weight: 700; }
+.text-white-75 { color: rgba(255,255,255,.75); }
+.text-white-50 { color: rgba(255,255,255,.5); }
+
+/* ──────── Navbar ──────── */
+.navbar {
+    padding: .75rem 1rem;
+    backdrop-filter: blur(10px);
+}
+.navbar-brand { font-size: 1.4rem; letter-spacing: -.5px; }
+.nav-link { font-weight: 500; transition: all .2s; border-radius: 6px; padding: .4rem .8rem !important; }
+.nav-link:hover { background: rgba(255,255,255,.15); }
+.nav-link.active { background: rgba(255,255,255,.2) !important; }
+
+/* Avatar circle in nav */
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .8rem;
+}
+
+/* ──────── Hero Section ──────── */
+.hero-section {
+    background: linear-gradient(135deg, #0d6efd 0%, #0099d4 50%, #00c9a7 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+.min-vh-75 { min-height: 75vh; }
+
+/* Floating animation for hero cards */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* ──────── Cards ──────── */
+.card { transition: transform .2s, box-shadow .2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.12) !important; }
+
+/* Feature cards */
+.feature-card { border-left: 4px solid transparent; }
+.feature-card:hover { border-left-color: var(--primary); }
+.feature-icon { font-size: 2.5rem; }
+
+/* Subject card */
+.subject-card {
+    transition: all .2s;
+    border-color: #e2e8f0 !important;
+    color: inherit;
+}
+.subject-card:hover {
+    border-color: var(--primary) !important;
+    background: #f0f7ff;
+    transform: translateY(-2px);
+}
+.subject-icon { font-size: 2rem; flex-shrink: 0; }
+
+/* ──────── Dashboard ──────── */
+.stat-pill {
+    background: rgba(255,255,255,.2);
+    border-radius: 12px;
+    padding: .5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 80px;
+    text-align: center;
+}
+.stat-pill small { font-size: 10px; opacity: .8; }
+.stat-pill span { font-size: 1.1rem; }
+
+/* Quick action buttons */
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    gap: .5rem;
+    transition: all .2s;
+    height: 100%;
+    min-height: 120px;
+    box-shadow: var(--shadow);
+}
+.quick-action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.15);
+    color: inherit;
+}
+
+/* ──────── Upload Area ──────── */
+.upload-area {
+    border: 2px dashed var(--primary) !important;
+    transition: all .2s;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.upload-area:hover { background: #f0f7ff !important; }
+.border-dashed { border-style: dashed !important; }
+.border-2 { border-width: 2px !important; }
+
+/* ──────── Chat ──────── */
+.session-item {
+    border: 1px solid transparent;
+    transition: all .15s;
+}
+.session-item:hover {
+    background: #f0f7ff;
+    border-color: var(--primary);
+}
+
+/* ──────── Steps (Profile Setup) ──────── */
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #718096;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin: 0 auto .5rem;
+    font-size: .9rem;
+}
+.step-circle.active {
+    background: var(--primary);
+    color: white;
+}
+.step-circle.completed {
+    background: var(--success);
+    color: white;
+}
+
+/* ──────── Badges ──────── */
+.badge { font-weight: 500; }
+
+/* ──────── Scrollbar ──────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #999; }
+
+/* ──────── Responsive ──────── */
+@media (max-width: 768px) {
+    .hero-section { min-height: auto; padding: 3rem 0; }
+    .quick-action-btn { min-height: 90px; padding: 1rem; font-size: .8rem; }
+    .stat-pill { min-width: 60px; }
+}
+
+/* ──────── Utilities ──────── */
+.rounded-4 { border-radius: 16px !important; }
+.rounded-top-4 { border-radius: 16px 16px 0 0 !important; }
+.min-vh-80 { min-height: 80vh; }
+.bg-white-20 { background: rgba(255,255,255,.2); }
+
+/* Form improvements */
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.2);
+}
+
+/* Progress bars */
+.progress { border-radius: 20px; }
+.progress-bar { border-radius: 20px; transition: width 1s ease; }

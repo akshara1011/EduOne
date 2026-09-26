@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Important High-Yield Questions — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'pyqs:list' %}">PYQ Papers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Important Questions</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">High-Yield Exam Questions</h2>
+            <p class="text-muted small mb-0">Statistically prioritized from frequency, recency, and marks distribution across past 10+ years</p>
+        </div>
+        <a href="{% url 'pyqs:list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-file-invoice me-1"></i> Full Papers
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <form class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-gray" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <select name="subject" class="form-select form-select-sm">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <select name="unit" class="form-select form-select-sm">
+                    <option value="">All Units</option>
+                    {% for u in units %}
+                    <option value="{{ u.id }}">Unit {{ u.unit_number }} — {{ u.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Priority Questions List -->
+    <div class="d-flex flex-column gap-3">
+        {% for q in questions %}
+        <div class="card border-0 shadow-sm rounded-4 card-hover">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-warning">{{ q.importance_label.0 }}</span>
+                            <span class="badge surface-gray text-dark">{{ q.marks }} Marks</span>
+                            <span class="badge bg-secondary font-monospace" style="font-size: 0.7rem;">
+                                {{ q.paper.subject.subject_code }} &bull; {{ q.paper.year }}
+                            </span>
+                            {% if q.topic %}
+                            <span class="text-muted small d-none d-sm-inline">
+                                &bull; {{ q.topic.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-semibold text-dark mb-2" style="line-height: 1.5;">
+                            {{ q.question_text }}
+                        </h5>
+
+                        <div class="text-muted small">
+                            {{ q.paper.get_exam_type_display }} Examination &bull; {{ q.paper.subject.name }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-end flex-shrink-0">
+                        <div class="text-end mb-2">
+                            <span class="fw-bold fs-5 text-warning">{{ q.importance_score }}</span>
+                            <span class="text-muted d-block" style="font-size: 0.68rem; text-transform: uppercase;">Yield Score</span>
+                        </div>
+                        <a href="{% url 'pyqs:question_detail' q.id %}" class="btn btn-secondary btn-sm">
+                            View Solution <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="edu-empty-state">
+            <div class="edu-empty-icon">
+                <i class="fas fa-star text-warning"></i>
+            </div>
+            <h5 class="fw-bold">No important questions found</h5>
+            <p class="text-muted small mb-0">Try changing your subject or unit selection to view prioritized questions.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

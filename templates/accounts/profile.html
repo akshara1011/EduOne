@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Student Profile — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Profile</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">Student Profile</h2>
+            <p class="text-muted small mb-0">Manage your identity, academic alignment and learning statistics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard:home' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm text-danger">
+                <i class="fas fa-arrow-right-from-bracket me-1"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════════ 1. PROFILE HEADER CARD ═══════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 text-center overflow-hidden">
+        <!-- Soft Pastel Accent Banner -->
+        <div style="height: 110px; background: linear-gradient(135deg, #F0EDF3 0%, #EAF1EB 50%, #F8EEE4 100%);"></div>
+
+        <div class="card-body p-4 pt-0" style="margin-top: -55px;">
+            <!-- Circular Illustrated Avatar (Large 104px) -->
+            <div class="d-inline-block position-relative mb-3">
+                {% include 'components/avatar.html' with avatar_size='lg' avatar_user=student %}
+            </div>
+
+            <!-- Student Name & Academic Tagline -->
+            <h3 class="fw-bold text-dark mb-1 d-flex align-items-center justify-content-center gap-2 flex-wrap">
+                <span>{{ student.display_name }}</span>
+                {% if student.gender == 'female' %}
+                    <span class="gender-badge-pill female" title="Female Student Profile"><i class="fas fa-venus"></i> Female</span>
+                {% elif student.gender == 'male' %}
+                    <span class="gender-badge-pill male" title="Male Student Profile"><i class="fas fa-mars"></i> Male</span>
+                {% endif %}
+            </h3>
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-2">
+                <span class="badge surface-gray text-dark">@{{ student.username }}</span>
+                {% if student.branch %}
+                <span class="badge surface-lavender text-dark">B.Tech &bull; {{ student.branch.name }}</span>
+                {% else %}
+                <span class="badge surface-lavender text-dark">B.Tech Engineering</span>
+                {% endif %}
+            </div>
+
+            <!-- University & Semester Pill -->
+            <p class="text-muted small mb-3">
+                {{ student.university.name|default:'University not set' }}
+                {% if student.current_semester %} &bull; Semester {{ student.current_semester }}{% endif %}
+                {% if student.college_name %} &bull; {{ student.college_name }}{% endif %}
+            </p>
+
+            <!-- 4 Quick Stats Badges -->
+            <div class="d-flex flex-wrap justify-content-center gap-3 pt-3 border-top">
+                <div class="p-2 px-3 rounded-pill surface-sage border small text-dark d-flex align-items-center gap-2">
+                    <span class="fs-6">🔥</span>
+                    <span><strong>{{ student.study_streak|default:'0' }}</strong> Day Streak</span>
+                </div>
+                <div class="p-2 px-3 rounded-pill surface-lavender border small text-dark d-flex align-items-center gap-2">
+                    <span class="fs-6">🤖</span>
+                    <span><strong>{{ student.chat_sessions.count|default:'0' }}</strong> AI Chats</span>
+                </div>
+                <div class="p-2 px-3 rounded-pill surface-peach border small text-dark d-flex align-items-center gap-2">
+                    <span class="fs-6">📸</span>
+                    <span><strong>{{ student.scanned_questions.count|default:'0' }}</strong> Questions Scanned</span>
+                </div>
+                <div class="p-2 px-3 rounded-pill surface-yellow border small text-dark d-flex align-items-center gap-2">
+                    <span class="fs-6">📝</span>
+                    <span><strong>{{ student.quiz_attempts.count|default:'0' }}</strong> Quizzes Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ 2. INFORMATION CARDS GRID ═══════════════ -->
+    <div class="row g-4">
+        <!-- LEFT: Learning Progress & Platform Statistics Cards -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-4">
+                <!-- Learning Progress Card -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-bottom pt-4 px-4 pb-2">
+                        <h5 class="fw-bold mb-1">
+                            <i class="fas fa-chart-line text-dark me-2"></i>Learning Progress
+                        </h5>
+                        <p class="text-muted small mb-0">Your exam readiness and activity breakdown</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="p-3 rounded-3 surface-sage d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-pill-icon bg-white text-success shadow-xs">
+                                        <i class="fas fa-fire"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">Active Study Streak</div>
+                                        <small class="text-muted">Consistent learning habit</small>
+                                    </div>
+                                </div>
+                                <span class="fw-bold fs-5 text-dark">{{ student.study_streak }} Days</span>
+                            </div>
+
+                            <div class="p-3 rounded-3 surface-lavender d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-pill-icon bg-white text-dark shadow-xs">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">AI Tutor Interactions</div>
+                                        <small class="text-muted">Queries asked &amp; solved</small>
+                                    </div>
+                                </div>
+                                <span class="fw-bold fs-5 text-dark">{{ student.total_questions_asked }} Asked</span>
+                            </div>
+
+                            <div class="p-3 rounded-3 surface-yellow d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-pill-icon bg-white text-dark shadow-xs">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">Mock Quiz Attempts</div>
+                                        <small class="text-muted">Semester revision tests</small>
+                                    </div>
+                                </div>
+                                <span class="fw-bold fs-5 text-dark">{{ student.quiz_attempts.count }} Tests</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <a href="{% url 'quizzes:my_attempts' %}" class="btn btn-secondary btn-sm w-100">
+                                View Full Quiz History <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Hub Card -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-bottom pt-4 px-4 pb-2">
+                        <h5 class="fw-bold mb-1">
+                            <i class="fas fa-compass text-dark me-2"></i>Quick Learning Hub
+                        </h5>
+                        <p class="text-muted small mb-0">Jump directly to your university resources</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{% url 'academics:syllabus_home' %}" class="d-flex align-items-center justify-content-between p-3 rounded-3 border hover-surface text-decoration-none text-dark">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="fs-5">📖</span>
+                                    <div>
+                                        <div class="fw-semibold small">My Semester Syllabus</div>
+                                        <span class="text-muted" style="font-size: 0.74rem;">Curriculum &amp; unit directory</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right text-muted small"></i>
+                            </a>
+
+                            <a href="{% url 'pyqs:list' %}" class="d-flex align-items-center justify-content-between p-3 rounded-3 border hover-surface text-decoration-none text-dark">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="fs-5">📝</span>
+                                    <div>
+                                        <div class="fw-semibold small">Question Papers (PYQs)</div>
+                                        <span class="text-muted" style="font-size: 0.74rem;">Past 10 years exam papers</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right text-muted small"></i>
+                            </a>
+
+                            <a href="{% url 'question_solver:home' %}" class="d-flex align-items-center justify-content-between p-3 rounded-3 border hover-surface text-decoration-none text-dark">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="fs-5">📸</span>
+                                    <div>
+                                        <div class="fw-semibold small">AI Question Scanner</div>
+                                        <span class="text-muted" style="font-size: 0.74rem;">Instant step-by-step solutions</span>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right text-muted small"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Academic Profile & Preferences Form -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom pt-4 px-4 pb-2">
+                    <h5 class="fw-bold mb-1">
+                        <i class="fas fa-graduation-cap text-dark me-2"></i>Academic Profile &amp; Preferences
+                    </h5>
+                    <p class="text-muted small mb-0">Update your branch, university and semester to personalize your curriculum</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger p-2 small mb-3">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        {% load crispy_forms_tags %}
+                        {% crispy form %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

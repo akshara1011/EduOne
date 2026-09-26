@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}{{ topic.name }} — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:syllabus_home' %}">Syllabus</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:subject_detail' topic.unit.subject.id %}">{{ topic.unit.subject.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:unit_detail' topic.unit.id %}">Unit {{ topic.unit.unit_number }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ topic.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
+            <div>
+                <span class="badge bg-secondary mb-1">Unit {{ topic.unit.unit_number }} &bull; {{ topic.unit.name }}</span>
+                <h2 class="fw-bold mb-1">{{ topic.name }}</h2>
+                {% if topic.description %}
+                <p class="text-muted small mb-0" style="max-width: 720px;">{{ topic.description }}</p>
+                {% endif %}
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'chatbot:home' %}?subject={{ topic.unit.subject.id }}&prompt=Explain%20{{ topic.name|urlencode }}%20with%20clear%20examples%20for%20my%20exam" class="btn btn-primary btn-sm">
+                    <i class="fas fa-sparkles me-1"></i> Explain with AI
+                </a>
+                <a href="{% url 'academics:unit_detail' topic.unit.id %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Unit
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Cards Learning Hub Grid -->
+    <div class="row g-4">
+        <!-- 1. Notes & PDFs -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-file-pdf text-danger me-2"></i>Study Notes &amp; Cheatsheets
+                    </h5>
+                    <span class="badge bg-light text-muted">{{ notes|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    {% for note in notes %}
+                    <a href="{% if note.pdf_file %}{{ note.pdf_file.url }}{% else %}#{% endif %}" target="_blank"
+                       class="d-flex align-items-center justify-content-between p-3 rounded-3 border mb-2 text-decoration-none text-dark hover-surface">
+                        <div class="min-w-0">
+                            <span class="badge bg-danger-subtle text-danger mb-1" style="font-size: 0.68rem;">{{ note.get_note_type_display }}</span>
+                            <div class="fw-semibold small text-truncate">{{ note.title }}</div>
+                        </div>
+                        <span class="btn btn-secondary btn-sm flex-shrink-0">
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fas fa-file-lines fs-4 opacity-50 mb-2 d-block"></i>
+                        No specific notes cataloged for this topic yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Video Lectures -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-circle-play text-danger me-2"></i>Curated Video Lectures
+                    </h5>
+                    <span class="badge bg-light text-muted">{{ videos|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    {% for video in videos %}
+                    <a href="{{ video.youtube_url }}" target="_blank" rel="noopener"
+                       class="d-flex align-items-center justify-content-between p-3 rounded-3 border mb-2 text-decoration-none text-dark hover-surface">
+                        <div class="d-flex align-items-center gap-3 min-w-0">
+                            <div class="stat-pill-icon surface-soft-peach text-danger flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="fab fa-youtube"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="fw-semibold small text-truncate">{{ video.title }}</div>
+                                <span class="text-muted" style="font-size: 0.72rem;">{{ video.channel_name|default:'YouTube' }}</span>
+                            </div>
+                        </div>
+                        <span class="btn btn-secondary btn-sm flex-shrink-0">
+                            Watch <i class="fas fa-play ms-1" style="font-size: 0.7rem;"></i>
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fas fa-video fs-4 opacity-50 mb-2 d-block"></i>
+                        No video lectures mapped for this topic yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Important University PYQs -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-star text-warning me-2"></i>High-Yield PYQ Questions
+                    </h5>
+                    <span class="badge bg-light text-muted">{{ pyqs|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    {% for q in pyqs %}
+                    <a href="{% url 'pyqs:question_detail' q.id %}"
+                       class="d-block p-3 rounded-3 border mb-2 text-decoration-none text-dark hover-surface">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning">{{ q.importance_label.0 }}</span>
+                            <span class="badge bg-light text-muted">{{ q.marks }} Marks</span>
+                        </div>
+                        <p class="mb-0 small fw-medium text-dark">{{ q.question_text|truncatewords:24 }}</p>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">
+                        <i class="fas fa-file-invoice fs-4 opacity-50 mb-2 d-block"></i>
+                        No previous year questions tagged specifically to this topic yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Practice Quizzes -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-brain text-success me-2"></i>Self Assessment
+                    </h5>
+                </div>
+                <div class="card-body p-4 d-flex flex-column">
+                    {% for quiz in quizzes %}
+                    <a href="{% url 'quizzes:detail' quiz.id %}"
+                       class="d-block p-3 rounded-3 border mb-2 text-decoration-none text-dark hover-surface">
+                        <div class="fw-semibold small">{{ quiz.title }}</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">
+                            {{ quiz.question_count }} questions &bull; {{ quiz.time_limit_minutes }} mins
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small my-auto">
+                        <i class="fas fa-circle-question fs-4 opacity-50 mb-2 d-block"></i>
+                        No targeted mock quiz found for this single topic.
+                    </div>
+                    {% endfor %}
+
+                    <div class="mt-auto pt-3 border-top">
+                        <a href="{% url 'quizzes:list' %}?q={{ topic.name|urlencode }}" class="btn btn-primary btn-sm w-100">
+                            Search All Quizzes for "{{ topic.name|truncatechars:18 }}"
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

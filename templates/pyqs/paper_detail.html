@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}{{ paper.subject.name }} {{ paper.year }} — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'pyqs:list' %}">PYQ Papers</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ paper.year }} {{ paper.get_exam_type_display }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-warning">{{ paper.year }}</span>
+                    <span class="badge bg-secondary font-monospace">{{ paper.subject.subject_code }}</span>
+                    <span class="badge bg-light text-muted">{{ paper.get_exam_type_display }}</span>
+                </div>
+                <h2 class="fw-bold mb-1">{{ paper.subject.name }}</h2>
+                <p class="text-muted small mb-0">{{ questions|length }} Extracted Questions with mark schemes</p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'pyqs:list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> All Papers
+                </a>
+                {% if paper.pdf_file %}
+                <a href="{{ paper.pdf_file.url }}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i> Original Exam PDF
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions List -->
+    <div class="d-flex flex-column gap-3">
+        {% for q in questions %}
+        <div class="card border-0 shadow-sm rounded-4 card-hover">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge surface-gray text-dark">Question {{ forloop.counter }}</span>
+                        <span class="badge bg-light text-muted">{{ q.marks }} Marks</span>
+                        <span class="badge bg-secondary font-monospace" style="font-size: 0.7rem;">{{ q.get_question_type_display }}</span>
+                    </div>
+                    {% if q.topic %}
+                    <span class="text-muted small d-none d-md-block">
+                        <i class="fas fa-tag me-1 text-dark"></i>{{ q.topic.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h5 class="fw-semibold text-dark mt-2 mb-3" style="line-height: 1.5;">
+                    {{ q.question_text }}
+                </h5>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <div>
+                        {% if q.solution_text %}
+                        <span class="badge bg-success-subtle text-success">
+                            <i class="fas fa-circle-check me-1"></i> Solution Available
+                        </span>
+                        {% else %}
+                        <span class="text-muted small">No verified solution yet</span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'pyqs:question_detail' q.id %}" class="btn btn-secondary btn-sm">
+                        View Solution <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="edu-empty-state">
+            <div class="edu-empty-icon">
+                <i class="fas fa-file-lines"></i>
+            </div>
+            <h5 class="fw-bold">No questions extracted for this paper yet</h5>
+            <p class="text-muted small mb-0">You can view the full question paper using the Original Exam PDF button above.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

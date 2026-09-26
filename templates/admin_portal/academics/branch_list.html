@@ -1,0 +1,70 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Engineering Branches{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Engineering Disciplines &amp; Branches</h1>
+            <p class="text-secondary small mb-0">Undergraduate branches (CSE, ECE, EEE, MECH, CIVIL, IT).</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:branch_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Branch
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Branch Name</th>
+                        <th>Enrolled Students</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for branch in branches %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary fw-bold">{{ branch.short_name }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ branch.name }}</div>
+                            {% if branch.description %}<div class="text-muted small">{{ branch.description|truncatechars:60 }}</div>{% endif %}
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ branch.student_count }} Students</span></td>
+                        <td>
+                            {% if branch.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:branch_edit' pk=branch.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:branch_delete' pk=branch.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No branches added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

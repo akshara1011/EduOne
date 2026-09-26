@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}My Syllabus — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Syllabus</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">Curriculum &amp; Syllabus</h2>
+            <p class="text-muted small mb-0">
+                {{ student.university.name|default:'University Syllabus' }}
+                {% if student.branch %} &bull; {{ student.branch.name }}{% endif %}
+                {% if student.current_semester %} &bull; Semester {{ student.current_semester }}{% endif %}
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard:home' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    {% if subjects %}
+    <div class="row g-4">
+        {% for subject in subjects %}
+        {% cycle 'surface-sage' 'surface-lavender' 'surface-peach' 'surface-yellow' as card_surface %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                        <span class="badge bg-secondary font-monospace">{{ subject.subject_code }}</span>
+                        <div class="d-flex gap-1">
+                            <span class="badge bg-light text-muted">{{ subject.get_subject_type_display }}</span>
+                            <span class="badge {{ card_surface }} text-dark">{{ subject.credits }} Credits</span>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold mb-2">{{ subject.name }}</h4>
+
+                    {% if subject.description %}
+                    <p class="text-muted small mb-3 flex-grow-1" style="line-height: 1.55;">
+                        {{ subject.description|truncatewords:20 }}
+                    </p>
+                    {% else %}
+                    <p class="text-muted small mb-3 flex-grow-1">Official B.Tech curriculum subject with core units, lecture notes, and university PYQ papers.</p>
+                    {% endif %}
+
+                    <!-- Units Preview List -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">
+                                Cataloged Units
+                            </span>
+                            <span class="badge bg-light text-muted" style="font-size: 0.7rem;">{{ subject.units.all|length }} Units</span>
+                        </div>
+                        <div class="d-flex flex-column gap-1">
+                            {% for unit in subject.units.all|slice:":4" %}
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-2 bg-light text-dark hover-surface" style="font-size: 0.8rem;">
+                                <span class="badge bg-secondary" style="font-size: 0.65rem; width: 22px; text-align: center;">{{ unit.unit_number }}</span>
+                                <span class="text-truncate fw-medium">{{ unit.name }}</span>
+                            </div>
+                            {% empty %}
+                            <span class="text-muted small py-2">No units cataloged yet.</span>
+                            {% endfor %}
+                            {% if subject.units.all|length > 4 %}
+                            <span class="text-muted small pt-1" style="font-size: 0.75rem;">+ {{ subject.units.all|length|add:"-4" }} more units in syllabus</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-3 border-top d-flex gap-2">
+                        <a href="{% url 'academics:subject_detail' subject.id %}" class="btn btn-primary btn-sm flex-grow-1">
+                            View Subject <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                        <a href="{% url 'academics:subject_syllabus' subject.id %}" class="btn btn-secondary btn-sm" title="Detailed Syllabus">
+                            <i class="fas fa-list-ul"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="edu-empty-state my-4">
+        <div class="edu-empty-icon">
+            <i class="fas fa-book-bookmark"></i>
+        </div>
+        <h5 class="fw-bold mb-1">No syllabus found for your profile</h5>
+        <p class="text-muted small mb-3">
+            Please make sure your university, regulation, branch, and current semester are configured in your profile.
+        </p>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-user-pen me-1"></i> Update Academic Settings
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

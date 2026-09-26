@@ -1,0 +1,96 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Units Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Subject Units &amp; Modules</h1>
+            <p class="text-secondary small mb-0">Units (1-5) dividing syllabus into structured study modules.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:unit_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Unit
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter by Subject -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <select name="subject" class="form-select">
+                    <option value="">All Subjects (Showing all units)</option>
+                    {% for sub in subjects %}
+                        <option value="{{ sub.id }}" {% if subject_id|stringformat:"s" == sub.id|stringformat:"s" %}selected{% endif %}>
+                            {{ sub.subject_code }} — {{ sub.name }} ({{ sub.semester.regulation.university.short_name }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-admin-primary flex-grow-1">Filter</button>
+                {% if subject_id %}
+                    <a href="{% url 'admin_portal:unit_list' %}" class="btn btn-light border">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Title &amp; Overview</th>
+                        <th>Subject</th>
+                        <th>Topics &amp; Notes</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for unit in units %}
+                    <tr>
+                        <td style="width: 100px;">
+                            <span class="badge bg-primary-subtle text-primary fw-bold">Unit {{ unit.unit_number }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ unit.name }}</div>
+                            {% if unit.description %}<div class="text-muted small">{{ unit.description|truncatechars:80 }}</div>{% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ unit.subject.subject_code }}</div>
+                            <div class="text-secondary small">{{ unit.subject.name }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{% url 'admin_portal:topic_list' %}?unit={{ unit.id }}" class="badge bg-light text-primary border text-decoration-none">
+                                    <i class="fas fa-list me-1"></i> {{ unit.topic_count }} Topics
+                                </a>
+                                <span class="badge bg-light text-secondary border">
+                                    <i class="fas fa-file-alt me-1"></i> {{ unit.notes_count }} Notes
+                                </span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:unit_edit' pk=unit.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:unit_delete' pk=unit.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No units found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

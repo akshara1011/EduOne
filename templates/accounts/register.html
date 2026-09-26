@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-4 my-auto">
+    <div class="auth-split-wrapper">
+        <div class="row g-0 align-items-stretch">
+            <!-- LEFT: Registration Form -->
+            <div class="col-lg-7 auth-form-side d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Brand Pill -->
+                    <div class="d-inline-flex align-items-center gap-2 mb-4 p-1 px-3 rounded-pill surface-gray border">
+                        <span class="fs-6">✨</span>
+                        <span class="fw-bold small text-dark">Get Started Free</span>
+                        <span class="badge bg-ai" style="font-size: 0.65rem;">B.Tech</span>
+                    </div>
+
+                    <h2 class="fw-bold text-dark mb-2" style="font-size: 1.85rem; letter-spacing: -0.03em;">Start your learning journey</h2>
+                    <p class="text-muted small mb-4" style="line-height: 1.55;">
+                        Everything you need for your B.Tech journey, in one place. Join thousands of engineering students mastering their semester exams.
+                    </p>
+
+                    <!-- Django Crispy Form -->
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% load crispy_forms_tags %}
+                        {% crispy form %}
+                    </form>
+                </div>
+
+                <!-- Footer link to Login -->
+                <div class="pt-4 mt-4 border-top text-center text-lg-start">
+                    <p class="text-muted small mb-0">
+                        Already have an account?
+                        <a href="{% url 'accounts:login' %}" class="fw-bold text-dark ms-1 text-decoration-underline">
+                            Login here →
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- RIGHT: Visual Highlights & Companion Side -->
+            <div class="col-lg-5 auth-visual-side text-center">
+                <!-- Top Badge -->
+                <div class="auth-badge-pill mb-4">
+                    <span class="stat-pill-icon surface-sage text-success" style="width: 24px; height: 24px; font-size: 0.75rem;">🎓</span>
+                    <span>Mapped to 6+ Universities</span>
+                </div>
+
+                <!-- Features Showcase Cards -->
+                <div class="d-flex flex-column gap-3 w-100 text-start px-2 mb-4" style="max-width: 340px;">
+                    <div class="p-3 bg-white rounded-3 border shadow-xs d-flex align-items-center gap-3">
+                        <div class="stat-pill-icon surface-lavender text-dark flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            📚
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">Curated Study Notes</div>
+                            <span class="text-muted" style="font-size: 0.74rem;">Unit-wise PDFs and revision guides</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white rounded-3 border shadow-xs d-flex align-items-center gap-3">
+                        <div class="stat-pill-icon surface-peach text-dark flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            📸
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">AI Question Scanner</div>
+                            <span class="text-muted" style="font-size: 0.74rem;">Snap exam questions for instant answers</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white rounded-3 border shadow-xs d-flex align-items-center gap-3">
+                        <div class="stat-pill-icon surface-yellow text-dark flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            📝
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark">10+ Years University PYQs</div>
+                            <span class="text-muted" style="font-size: 0.74rem;">High-yield questions with mark schemes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3 surface-gray border text-center" style="max-width: 340px;">
+                    <small class="text-muted fw-semibold" style="font-size: 0.75rem;">
+                        <i class="fas fa-lock me-1"></i> 100% Free for engineering students
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

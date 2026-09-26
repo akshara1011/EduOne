@@ -1,0 +1,666 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ErVeda — B.Tech Academic Learning Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ═══════════════════════════════════════════════════
+       HERO WITH REAL-TIME BACKGROUND ANIMATION
+    ═══════════════════════════════════════════════════ */
+    .hero-container-app {
+        position: relative;
+        overflow: hidden;
+        background-color: #ffffff;
+        /* Light visible engineering grid pattern */
+        background-image: 
+            radial-gradient(circle at 50% 25%, rgba(37, 99, 235, 0.07) 0%, rgba(248, 250, 252, 0) 70%),
+            linear-gradient(to right, rgba(226, 232, 240, 0.7) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(226, 232, 240, 0.7) 1px, transparent 1px);
+        background-size: 100% 100%, 34px 34px, 34px 34px;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 4.5rem 0 4rem;
+    }
+
+    /* Ambient animated background orbs */
+    .bg-ambient-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(75px);
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.4;
+    }
+
+    .bg-orb-1 {
+        width: 360px;
+        height: 360px;
+        background: #bfdbfe;
+        top: -40px;
+        right: 6%;
+        animation: float-ambient-1 12s ease-in-out infinite alternate;
+    }
+
+    .bg-orb-2 {
+        width: 320px;
+        height: 320px;
+        background: #cbd5e1;
+        bottom: -30px;
+        left: 5%;
+        animation: float-ambient-2 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes float-ambient-1 {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(-25px, 30px) scale(1.08); }
+    }
+
+    @keyframes float-ambient-2 {
+        0% { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(30px, -20px) scale(0.95); }
+    }
+
+    .hero-content-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-headline {
+        font-size: clamp(2.2rem, 4.2vw, 3.2rem);
+        font-weight: 800;
+        line-height: 1.18;
+        color: #0f172a;
+        letter-spacing: -0.025em;
+        margin-bottom: 1.25rem;
+    }
+
+    .hero-lead-text {
+        font-size: 1.1rem;
+        line-height: 1.65;
+        color: #475569;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        max-width: 520px;
+    }
+
+    .btn-brand-primary {
+        background: #2563eb;
+        color: #ffffff !important;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 11px 24px;
+        border-radius: 8px;
+        border: 1px solid #1d4ed8;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-brand-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-brand-secondary {
+        background: #ffffff;
+        color: #1e293b !important;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 11px 22px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .btn-brand-secondary:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        transform: translateY(-1px);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FLOATING STUDENT ACADEMIC WORKSPACE
+    ═══════════════════════════════════════════════════ */
+    .workspace-floating-wrapper {
+        position: relative;
+        z-index: 1;
+        animation: float-workspace 5s ease-in-out infinite;
+    }
+
+    @keyframes float-workspace {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-9px);
+        }
+    }
+
+    .dashboard-preview-card {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
+        overflow: hidden;
+        position: relative;
+        z-index: 2;
+    }
+
+    .floating-badge {
+        position: absolute;
+        z-index: 3;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 50px;
+        padding: 7px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #0f172a;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .badge-top-right {
+        top: -14px;
+        right: -8px;
+        animation: float-badge-top 4.2s ease-in-out infinite alternate;
+    }
+
+    .badge-bottom-left {
+        bottom: -14px;
+        left: -8px;
+        animation: float-badge-bottom 4.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes float-badge-top {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-6px); }
+    }
+
+    @keyframes float-badge-bottom {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(6px); }
+    }
+
+    .preview-header {
+        background: #0f172a;
+        color: #ffffff;
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .preview-body {
+        padding: 18px;
+        background: #f8fafc;
+    }
+
+    .preview-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 14px;
+    }
+
+    .preview-subject-item {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.15s ease;
+    }
+
+    .preview-subject-item:hover {
+        border-color: #94a3b8;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CORE ACADEMIC MODULES
+    ═══════════════════════════════════════════════════ */
+    .academic-tool-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.6rem 1.4rem;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .academic-tool-card:hover {
+        border-color: #2563eb;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        color: inherit;
+    }
+
+    .tool-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1.1rem;
+        border: 1px solid #dbeafe;
+    }
+
+    .tool-card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+
+    .tool-card-desc {
+        color: #475569;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+        flex-grow: 1;
+    }
+
+    .tool-card-link {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #2563eb;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .academic-tool-card:hover .tool-card-link {
+        color: #1d4ed8;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       UNIVERSITY CARDS
+    ═══════════════════════════════════════════════════ */
+    .university-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.15rem 1rem;
+        text-align: center;
+        text-decoration: none;
+        color: #0f172a;
+        display: block;
+        transition: all 0.15s ease;
+        height: 100%;
+    }
+
+    .university-box:hover {
+        border-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+        color: #2563eb;
+    }
+
+    .university-code {
+        width: 38px;
+        height: 38px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #0f172a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .university-box:hover .university-code {
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CALL TO ACTION BANNER
+    ═══════════════════════════════════════════════════ */
+    .app-cta-card {
+        background: #0f172a;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        color: #ffffff;
+        text-align: center;
+        border: 1px solid #1e293b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ═══════════════════════════════════════════════════
+     1. HERO SECTION (WITH VISIBLE LIGHT BACKGROUND PATTERN & FLOATING ANIMATIONS)
+═══════════════════════════════════════════════════ -->
+<section class="hero-container-app">
+    <!-- Ambient Animated Gradient Orbs in Background -->
+    <div class="bg-ambient-orb bg-orb-1"></div>
+    <div class="bg-ambient-orb bg-orb-2"></div>
+
+    <div class="container py-lg-3 hero-content-wrapper">
+        <div class="row align-items-center g-5">
+            
+            <!-- LEFT COLUMN: Headline & CTAs -->
+            <div class="col-lg-6">
+                
+                <h1 class="hero-headline">
+                    Smart Academic Learning for Engineering Students.
+                </h1>
+
+                <p class="hero-lead-text">
+                    Access semester syllabus repositories, verified study notes, previous year question papers, and interactive problem solving in one unified platform.
+                </p>
+
+                <div class="d-flex gap-3 flex-wrap align-items-center">
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'dashboard:home' %}" class="btn-brand-primary">
+                            Go to Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                        <a href="{% url 'resources:notes' %}" class="btn-brand-secondary">
+                            Course Notes
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:register' %}" class="btn-brand-primary">
+                            Get Started <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                        <a href="{% url 'academics:syllabus_home' %}" class="btn-brand-secondary">
+                            View Syllabus
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: FLOATING STUDENT ACADEMIC WORKSPACE -->
+            <div class="col-lg-6">
+                <div class="workspace-floating-wrapper">
+                    
+                    <!-- Floating Companion Badge Top -->
+                    <div class="floating-badge badge-top-right">
+                        <i class="fas fa-circle-check text-success me-2"></i>
+                        <span>Syllabus Verified &bull; Active</span>
+                    </div>
+
+                    <!-- Dashboard Preview Card -->
+                    <div class="dashboard-preview-card">
+                        
+                        <div class="preview-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-graduation-cap text-primary"></i>
+                                <span class="fw-bold small">Student Academic Workspace</span>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-dark small">Semester 3</span>
+                        </div>
+
+                        <div class="preview-body">
+                            
+                            <!-- Quick Metric Row -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <div class="preview-stat-card text-center">
+                                        <div class="fw-bold text-dark fs-5">7</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;">Subjects</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-stat-card text-center">
+                                        <div class="fw-bold text-primary fs-5">35</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;">Total Units</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-stat-card text-center">
+                                        <div class="fw-bold text-success fs-5">100%</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem;">Verified</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Realistic Subjects List -->
+                            <div class="preview-subject-item">
+                                <div>
+                                    <div class="fw-bold text-dark small">Data Structures (CS301)</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">5 Units &bull; Stacks, Queues, BST, Graphs</div>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary small">Active</span>
+                            </div>
+
+                            <div class="preview-subject-item">
+                                <div>
+                                    <div class="fw-bold text-dark small">Operating Systems (CS303)</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">5 Units &bull; CPU Scheduling, Paging, Threads</div>
+                                </div>
+                                <span class="badge bg-light text-muted border small">Study Notes</span>
+                            </div>
+
+                            <div class="preview-subject-item">
+                                <div>
+                                    <div class="fw-bold text-dark small">Database Management (CS302)</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">5 Units &bull; Normalization, SQL, Transactions</div>
+                                </div>
+                                <span class="badge bg-light text-muted border small">PYQs Ready</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Floating Companion Badge Bottom -->
+                    <div class="floating-badge badge-bottom-left">
+                        <i class="fas fa-file-invoice text-primary me-2"></i>
+                        <span>Solved PYQ Papers</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     2. CORE ACADEMIC MODULES
+═══════════════════════════════════════════════════ -->
+<section class="py-5">
+    <div class="container py-lg-2">
+        
+        <div class="mb-4">
+            <h2 class="h4 fw-bold text-dark mb-1">Academic Modules</h2>
+            <p class="text-secondary small">Direct access to curriculum repositories, verified course notes, and examination archives.</p>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- MODULE 1: Syllabus -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'academics:syllabus_home' %}" class="academic-tool-card">
+                    <div>
+                        <div class="tool-card-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3 class="tool-card-title">Syllabus Directory</h3>
+                        <p class="tool-card-desc">
+                            Semester-wise unit outlines, credit breakdowns, and subject prerequisites for your branch.
+                        </p>
+                    </div>
+                    <div class="tool-card-link">
+                        Explore Syllabus <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- MODULE 2: Notes -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'resources:notes' %}" class="academic-tool-card">
+                    <div>
+                        <div class="tool-card-icon">
+                            <i class="fas fa-file-lines"></i>
+                        </div>
+                        <h3 class="tool-card-title">Study Notes</h3>
+                        <p class="tool-card-desc">
+                            Verified chapter-wise notes, essential formula sheets, and key concept summaries.
+                        </p>
+                    </div>
+                    <div class="tool-card-link">
+                        Access Notes <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- MODULE 3: PYQs -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'pyqs:list' %}" class="academic-tool-card">
+                    <div>
+                        <div class="tool-card-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <h3 class="tool-card-title">Previous Year Papers</h3>
+                        <p class="tool-card-desc">
+                            Authentic university question papers with verified step-by-step model derivations.
+                        </p>
+                    </div>
+                    <div class="tool-card-link">
+                        Practice PYQs <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- MODULE 4: Doubt Solver / Scanner -->
+            <div class="col-md-6 col-lg-3">
+                <a href="{% url 'question_solver:home' %}" class="academic-tool-card">
+                    <div>
+                        <div class="tool-card-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h3 class="tool-card-title">Question Solver</h3>
+                        <p class="tool-card-desc">
+                            Upload or scan textbook and exam questions to inspect step-by-step theoretical solutions.
+                        </p>
+                    </div>
+                    <div class="tool-card-link">
+                        Scan Question <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     3. SUPPORTED TECHNICAL UNIVERSITIES
+═══════════════════════════════════════════════════ -->
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container py-lg-2">
+        
+        <div class="mb-4 text-center">
+            <h2 class="h4 fw-bold text-dark mb-1">Supported Universities</h2>
+            <p class="text-secondary small">Browse curriculum archives and branch regulations across institutional repositories.</p>
+        </div>
+
+        <div class="row g-3 justify-content-center pt-2">
+            
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">JN</div>
+                    <div class="fw-bold small text-dark">JNTUH</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Telangana</div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">VT</div>
+                    <div class="fw-bold small text-dark">VTU</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Karnataka</div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">AK</div>
+                    <div class="fw-bold small text-dark">AKTU</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Uttar Pradesh</div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">AU</div>
+                    <div class="fw-bold small text-dark">Anna Univ</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Tamil Nadu</div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">GT</div>
+                    <div class="fw-bold small text-dark">GTU</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Gujarat</div>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{% url 'academics:syllabus_home' %}" class="university-box">
+                    <div class="university-code">SP</div>
+                    <div class="fw-bold small text-dark">SPPU</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Maharashtra</div>
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     4. PORTAL CALL TO ACTION
+═══════════════════════════════════════════════════ -->
+<section class="container my-5">
+    <div class="app-cta-card">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="h3 fw-bold mb-2">Ready to Start Learning?</h2>
+            <p class="text-secondary mb-4 small" style="color: #94a3b8 !important;">
+                Begin reviewing verified course notes, university question paper archives, and interactive problem derivations.
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'dashboard:home' %}" class="btn btn-light fw-bold px-4 py-2 rounded-3 text-dark">
+                        Go to Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:register' %}" class="btn-brand-primary px-4 py-2">
+                        Create Student Account <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn-brand-secondary px-4 py-2">
+                        Sign In
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ subject.name }} Syllabus — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:syllabus_home' %}">Syllabus</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:subject_detail' subject.id %}">{{ subject.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Full Syllabus</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
+            <div>
+                <span class="badge bg-secondary font-monospace mb-1">{{ subject.subject_code }}</span>
+                <h2 class="fw-bold mb-1">{{ subject.name }} — Complete Syllabus</h2>
+                <p class="text-muted small mb-0">Topic-by-topic breakdown across all units</p>
+            </div>
+            <a href="{% url 'academics:subject_detail' subject.id %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Subject Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Syllabus Units Accordion -->
+    <div class="accordion d-flex flex-column gap-3" id="unitsAccordion">
+        {% for unit in units %}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white p-0 border-0" id="heading{{ unit.id }}">
+                <button class="btn w-100 text-start d-flex justify-content-between align-items-center p-3 px-4 {% if not forloop.first %}collapsed{% endif %}"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ unit.id }}"
+                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                        aria-controls="collapse{{ unit.id }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-secondary font-monospace" style="width: 28px; text-align: center;">{{ unit.unit_number }}</span>
+                        <div>
+                            <span class="fw-bold fs-6 text-dark d-block">Unit {{ unit.unit_number }}: {{ unit.name }}</span>
+                            <span class="text-muted small">{{ unit.topics.all|length }} Topics</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-muted small"></i>
+                </button>
+            </div>
+
+            <div id="collapse{{ unit.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                 aria-labelledby="heading{{ unit.id }}" data-bs-parent="#unitsAccordion">
+                <div class="card-body px-4 pb-4 pt-1">
+                    {% if unit.description %}
+                    <p class="text-muted small mb-3 p-3 rounded-3 surface-gray">
+                        {{ unit.description }}
+                    </p>
+                    {% endif %}
+
+                    <div class="row g-2">
+                        {% for topic in unit.topics.all %}
+                        <div class="col-md-6">
+                            <a href="{% url 'academics:topic_detail' topic.id %}"
+                               class="d-flex align-items-start gap-2 p-2 rounded-3 border hover-surface text-decoration-none text-dark h-100">
+                                <i class="fas fa-circle-dot text-dark mt-1" style="font-size: 0.65rem;"></i>
+                                <div class="min-w-0">
+                                    <div class="fw-medium small text-truncate">{{ topic.name }}</div>
+                                    {% if topic.description %}
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ topic.description|truncatewords:10 }}</div>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <span class="text-muted small">No topics added to this unit yet.</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="edu-empty-state">
+            <div class="edu-empty-icon">
+                <i class="fas fa-list-ul"></i>
+            </div>
+            <h6 class="fw-bold">No units cataloged for this syllabus</h6>
+            <p class="text-muted small mb-0">Check back soon as syllabus content is updated.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

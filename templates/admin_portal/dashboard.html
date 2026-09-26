@@ -1,0 +1,307 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Centralized Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <!-- Welcome Header & Quick Actions -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Administrative Overview</h1>
+            <p class="text-secondary small mb-0">Centralized control center for student management, curriculum hierarchy, notes, and examination papers.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'admin_portal:student_create' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-user-plus me-1"></i> Add Student
+            </a>
+            <a href="{% url 'admin_portal:subject_create' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-book me-1"></i> Add Subject
+            </a>
+            <a href="{% url 'admin_portal:note_create' %}" class="btn btn-sm btn-admin-primary">
+                <i class="fas fa-upload me-1"></i> Upload Note
+            </a>
+            <a href="{% url 'admin_portal:paper_create' %}" class="btn btn-sm btn-admin-primary">
+                <i class="fas fa-file-invoice me-1"></i> Upload Paper
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         TOP METRICS ROW
+    ═══════════════════════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+        
+        <!-- Students -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Registered Students</span>
+                    <div class="metric-icon-wrap bg-primary-subtle text-primary">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="metric-number">{{ total_students }}</div>
+                <div class="text-muted small">
+                    <span class="text-success fw-bold">{{ active_students }} active</span> &bull; {{ staff_count }} staff
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Hierarchy -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Curriculum Scope</span>
+                    <div class="metric-icon-wrap bg-info-subtle text-info-emphasis">
+                        <i class="fas fa-university"></i>
+                    </div>
+                </div>
+                <div class="metric-number">{{ total_subjects }} <span class="fs-6 fw-normal text-muted">Subjects</span></div>
+                <div class="text-muted small">
+                    {{ total_universities }} Univs &bull; {{ total_branches }} Branches &bull; {{ total_units }} Units
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Study Materials</span>
+                    <div class="metric-icon-wrap bg-success-subtle text-success">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                </div>
+                <div class="metric-number">{{ total_notes }} <span class="fs-6 fw-normal text-muted">Notes</span></div>
+                <div class="text-muted small">
+                    <span class="text-success fw-bold">{{ approved_notes }} approved</span> &bull; {{ total_videos }} videos
+                </div>
+            </div>
+        </div>
+
+        <!-- PYQs & Quizzes -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Examination Archives</span>
+                    <div class="metric-icon-wrap bg-warning-subtle text-warning">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                </div>
+                <div class="metric-number">{{ total_papers }} <span class="fs-6 fw-normal text-muted">Papers</span></div>
+                <div class="text-muted small">
+                    {{ total_pyq_questions }} PYQs &bull; {{ total_quizzes }} Quizzes
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         RECENT STUDENTS & CONTENT REPOSITORIES
+    ═══════════════════════════════════════════════════ -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Recent Students Table -->
+        <div class="col-lg-7">
+            <div class="admin-card">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="fas fa-users text-primary me-2"></i> Recently Registered Students
+                    </h5>
+                    <a href="{% url 'admin_portal:student_list' %}" class="small text-primary fw-bold text-decoration-none">
+                        View All ({{ total_students }}) &rarr;
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>University / Branch</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in recent_students %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ student.display_name }}</div>
+                                    <div class="text-muted small">{{ student.email }}</div>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark">{{ student.university.short_name|default:"Not selected" }}</div>
+                                    <div class="text-muted small">{{ student.branch.short_name|default:"-" }}</div>
+                                </td>
+                                <td>
+                                    {% if student.is_active %}
+                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                    {% endif %}
+                                    {% if student.is_staff %}
+                                        <span class="badge bg-primary-subtle text-primary">Staff</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'admin_portal:student_detail' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="View Details">
+                                        <i class="fas fa-eye text-secondary"></i>
+                                    </a>
+                                    <a href="{% url 'admin_portal:student_edit' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                        <i class="fas fa-pen text-primary"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No students registered yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Hierarchy Status -->
+        <div class="col-lg-5">
+            <div class="admin-card h-100">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="fas fa-sitemap text-primary me-2"></i> Academic Institutions
+                    </h5>
+                    <a href="{% url 'admin_portal:university_create' %}" class="btn btn-sm btn-outline-primary py-0 px-2 small">
+                        + Add Univ
+                    </a>
+                </div>
+                <div class="p-3">
+                    <ul class="list-group list-group-flush">
+                        {% for univ in univ_stats %}
+                        <li class="list-group-item px-0 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold text-dark">{{ univ.short_name }} — {{ univ.name }}</div>
+                                <div class="text-muted small">{{ univ.state }} &bull; {{ univ.reg_count }} Regulations</div>
+                            </div>
+                            <span class="badge bg-light text-dark border">{{ univ.student_count }} Students</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted text-center py-3">No universities configured yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         RECENT NOTES & RECENT PAPERS
+    ═══════════════════════════════════════════════════ -->
+    <div class="row g-4">
+        
+        <!-- Recent Notes -->
+        <div class="col-lg-6">
+            <div class="admin-card">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="fas fa-file-pdf text-danger me-2"></i> Recent Study Notes
+                    </h5>
+                    <a href="{% url 'admin_portal:note_list' %}" class="small text-primary fw-bold text-decoration-none">
+                        Manage Notes &rarr;
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Title / Subject</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in recent_notes %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ note.title|truncatechars:40 }}</div>
+                                    <div class="text-muted small">{{ note.subject.subject_code }} &bull; {{ note.get_note_type_display }}</div>
+                                </td>
+                                <td>
+                                    {% if note.is_approved %}
+                                        <span class="badge bg-success-subtle text-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'admin_portal:note_edit' pk=note.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                        <i class="fas fa-pen text-primary"></i>
+                                    </a>
+                                    <a href="{% url 'admin_portal:note_toggle_approve' pk=note.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Toggle Approval">
+                                        <i class="fas fa-check text-success"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-muted text-center py-3">No notes uploaded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Question Papers -->
+        <div class="col-lg-6">
+            <div class="admin-card">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="fas fa-file-invoice text-warning me-2"></i> Recent Question Papers
+                    </h5>
+                    <a href="{% url 'admin_portal:paper_list' %}" class="small text-primary fw-bold text-decoration-none">
+                        Manage Papers &rarr;
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table">
+                        <thead>
+                            <tr>
+                                <th>Subject / Year</th>
+                                <th>Type</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in recent_papers %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ paper.subject.subject_code }} — {{ paper.subject.name|truncatechars:28 }}</div>
+                                    <div class="text-muted small">{{ paper.year }} Examination</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ paper.get_exam_type_display }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'admin_portal:paper_edit' pk=paper.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                        <i class="fas fa-pen text-primary"></i>
+                                    </a>
+                                    <a href="{% url 'admin_portal:question_create' %}?paper={{ paper.id }}" class="btn btn-sm btn-light border py-1 px-2 text-primary" title="Add Question">
+                                        + Q
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-muted text-center py-3">No question papers uploaded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

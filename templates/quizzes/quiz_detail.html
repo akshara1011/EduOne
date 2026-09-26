@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} — ErVeda Practice{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 860px;">
+    <!-- Navigation -->
+    <div class="mb-3">
+        <a href="{% url 'quizzes:list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Quizzes
+        </a>
+    </div>
+
+    <!-- Main Exam Intro Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge surface-gray text-dark">{{ quiz.get_quiz_type_display }}</span>
+                <span class="badge bg-secondary">{{ quiz.get_difficulty_display }}</span>
+                <span class="badge bg-light text-muted">{{ quiz.subject.name }}</span>
+            </div>
+
+            <h2 class="fw-bold mb-2">{{ quiz.title }}</h2>
+            <p class="text-muted small mb-4">
+                {% if quiz.unit %}Unit {{ quiz.unit.unit_number }}: {{ quiz.unit.name }}{% endif %}
+                {% if quiz.topic %} &bull; Topic: {{ quiz.topic.name }}{% endif %}
+            </p>
+
+            <!-- 4 Quick Stats -->
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 surface-sage">
+                        <h4 class="fw-bold mb-0 text-dark">{{ question_count }}</h4>
+                        <span class="text-muted small">Questions</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 surface-peach">
+                        <h4 class="fw-bold mb-0 text-dark">{{ quiz.time_limit_minutes }}</h4>
+                        <span class="text-muted small">Minutes</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 surface-yellow">
+                        <h4 class="fw-bold mb-0 text-dark">{{ quiz.total_marks }}</h4>
+                        <span class="text-muted small">Total Marks</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 surface-lavender">
+                        <h4 class="fw-bold mb-0 text-dark">{{ quiz.pass_marks }}</h4>
+                        <span class="text-muted small">Pass Marks</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start / Resume Action -->
+            <div class="pt-3 border-top">
+                {% if in_progress %}
+                <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <i class="fas fa-clock-rotate-left me-2"></i> You have an attempt in progress.
+                    </div>
+                    <a href="{% url 'quizzes:take_quiz' in_progress.id %}" class="btn btn-warning btn-sm">
+                        Resume Now
+                    </a>
+                </div>
+                {% else %}
+                <a href="{% url 'quizzes:start_quiz' quiz.id %}" class="btn btn-primary btn-lg w-100">
+                    <i class="fas fa-play me-2"></i> Start Examination Now
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Past Attempts History -->
+    {% if past_attempts %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom pt-3 px-4 pb-2">
+            <h6 class="fw-bold mb-0 text-muted" style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <i class="fas fa-history me-1"></i> Your Past Attempts
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Date Completed</th>
+                            <th>Raw Score</th>
+                            <th>Percentage</th>
+                            <th class="pe-4 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in past_attempts %}
+                        <tr>
+                            <td class="ps-4 text-muted small">{{ attempt.completed_at|date:'d M Y, H:i' }}</td>
+                            <td><span class="fw-semibold">{{ attempt.score }}</span> / {{ quiz.total_marks }}</td>
+                            <td>
+                                <span class="badge {% if attempt.percentage >= 50 %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ attempt.percentage }}%
+                                </span>
+                            </td>
+                            <td class="pe-4 text-end">
+                                <a href="{% url 'quizzes:results' attempt.id %}" class="btn btn-secondary btn-sm">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

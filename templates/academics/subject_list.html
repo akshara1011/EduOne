@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}All Subjects — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'academics:syllabus_home' %}">Syllabus</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">All Subjects</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">Course Directory</h2>
+            <p class="text-muted small mb-0">Browse all engineering subjects cataloged in ErVeda</p>
+        </div>
+
+        <a href="{% url 'academics:syllabus_home' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> My Semester
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for subject in subjects %}
+        {% cycle 'surface-sage' 'surface-lavender' 'surface-peach' 'surface-yellow' as card_surface %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-secondary font-monospace">{{ subject.subject_code }}</span>
+                        <span class="badge {{ card_surface }} text-dark">{{ subject.credits }} Credits</span>
+                    </div>
+
+                    <h4 class="fw-bold mb-2">{{ subject.name }}</h4>
+                    <p class="text-muted small mb-3 flex-grow-1">
+                        {{ subject.get_subject_type_display }}
+                        {% if subject.description %}&bull; {{ subject.description|truncatewords:18 }}{% endif %}
+                    </p>
+
+                    <div class="mt-auto pt-3 border-top">
+                        <a href="{% url 'academics:subject_detail' subject.id %}" class="btn btn-primary btn-sm w-100">
+                            Explore Units &amp; Notes <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="edu-empty-state">
+                <div class="edu-empty-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h5 class="fw-bold">No subjects cataloged yet</h5>
+                <p class="text-muted small mb-0">Please check back soon as new curriculum data is being added.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

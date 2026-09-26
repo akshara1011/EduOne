@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Results: {{ quiz.title }} — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'quizzes:list' %}">Quizzes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Results</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">{{ quiz.title }} — Evaluation</h2>
+            <p class="text-muted small mb-0">Completed on {{ attempt.completed_at|date:'d M Y, H:i' }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'quizzes:detail' quiz.id %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-rotate-right me-1"></i> Retake Examination
+            </a>
+            <a href="{% url 'quizzes:my_attempts' %}" class="btn btn-secondary btn-sm">
+                All Attempts
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Results Row -->
+    <div class="row g-4 mb-4">
+        <!-- LEFT: Score Summary Card -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body text-center p-4 p-md-5 d-flex flex-column justify-content-center">
+                    <div class="mb-3">
+                        {% if attempt.passed %}
+                        <div class="stat-pill-icon surface-soft-mint text-success mx-auto" style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        {% else %}
+                        <div class="stat-pill-icon surface-soft-peach text-warning mx-auto" style="width: 64px; height: 64px; font-size: 1.75rem;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="display-3 fw-bold mb-1 {% if attempt.passed %}text-success{% else %}text-dark{% endif %}">
+                        {{ score_pct }}%
+                    </div>
+                    <p class="text-muted small mb-3">{{ attempt.score }} / {{ quiz.total_marks }} Marks Earned</p>
+
+                    <div>
+                        <span class="badge {% if attempt.passed %}bg-success{% else %}bg-warning{% endif %} px-3 py-2 fs-6">
+                            {% if attempt.passed %}
+                            <i class="fas fa-circle-check me-1"></i> Examination Passed
+                            {% else %}
+                            <i class="fas fa-clock-rotate-left me-1"></i> Needs Revision
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Breakdown Row -->
+                    <div class="row g-2 text-center">
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 surface-sage">
+                                <span class="fw-bold fs-5 text-success d-block">{{ attempt.correct_count }}</span>
+                                <small class="text-muted" style="font-size: 0.72rem;">Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 surface-peach">
+                                <span class="fw-bold fs-5 text-danger d-block">{{ attempt.wrong_count }}</span>
+                                <small class="text-muted" style="font-size: 0.72rem;">Incorrect</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 surface-lavender">
+                                <span class="fw-bold fs-5 text-dark d-block">{{ time_taken_fmt }}</span>
+                                <small class="text-muted" style="font-size: 0.72rem;">Time Taken</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: AI Feedback & Weak Topics -->
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-3 h-100">
+                <!-- AI Feedback Card -->
+                <div class="card border-0 shadow-sm rounded-4 flex-grow-1">
+                    <div class="card-header bg-white border-bottom pt-3 px-4 pb-2 d-flex align-items-center justify-content-between">
+                        <h6 class="fw-bold mb-0">
+                            <i class="fas fa-robot text-dark me-2"></i>Gemini AI Diagnostic Feedback
+                        </h6>
+                        <span class="badge bg-ai">Analysis</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="mb-0 text-dark" style="line-height: 1.65; font-size: 0.95rem;">
+                            {{ analysis.ai_feedback|default:'Good attempt! Review the questions you missed below to solidify your understanding of these syllabus concepts.' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Weak Topics Card (If any) -->
+                {% if analysis.weak_topics %}
+                <div class="card border-0 shadow-sm rounded-4 surface-peach">
+                    <div class="card-body p-3 px-4">
+                        <h6 class="fw-bold mb-2 text-warning d-flex align-items-center">
+                            <i class="fas fa-triangle-exclamation me-2"></i> Focus Areas for Revision
+                        </h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for t in analysis.weak_topics %}
+                            <span class="badge bg-warning">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- AI Recommendations List -->
+                {% if analysis.recommendations %}
+                <div class="card border-0 shadow-sm rounded-4 surface-lavender">
+                    <div class="card-body p-3 px-4">
+                        <h6 class="fw-bold mb-2 text-dark d-flex align-items-center">
+                            <i class="fas fa-lightbulb me-2"></i> Study Recommendations
+                        </h6>
+                        <ul class="mb-0 small ps-3">
+                            {% for r in analysis.recommendations %}
+                            <li class="mb-1 text-dark">{{ r }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Question-by-Question Detailed Review -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Detailed Question Review</h5>
+            <span class="badge bg-light text-muted">{{ question_results|length }} Questions Reviewed</span>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="d-flex flex-column gap-3">
+                {% for item in question_results %}
+                <div class="p-3 rounded-3 border {% if item.is_correct %}border-success-subtle surface-soft-mint{% else %}border-danger-subtle surface-soft-peach{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold small text-muted">Question {{ forloop.counter }}</span>
+                        <span class="badge {% if item.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if item.is_correct %}
+                            <i class="fas fa-check me-1"></i> Correct
+                            {% else %}
+                            <i class="fas fa-times me-1"></i> Incorrect
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <h6 class="fw-semibold text-dark mb-2" style="line-height: 1.5;">
+                        {{ item.question.question_text }}
+                    </h6>
+
+                    <div class="small mb-2">
+                        <span class="text-muted">Your Answer:</span>
+                        <strong class="{% if item.is_correct %}text-success{% else %}text-danger{% endif %} ms-1">
+                            {{ item.student_answer|default:'Not answered' }}
+                        </strong>
+                        <span class="mx-2 text-muted">&bull;</span>
+                        <span class="text-muted">Correct Answer:</span>
+                        <strong class="text-success ms-1">{{ item.correct_answer }}</strong>
+                    </div>
+
+                    {% if item.question.explanation %}
+                    <div class="p-2 bg-white rounded-2 border mt-2 small text-muted" style="line-height: 1.55;">
+                        <strong class="text-dark"><i class="fas fa-circle-info me-1 text-dark"></i> Explanation:</strong>
+                        {{ item.question.explanation }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-3 text-muted small">
+                    No detailed review available.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

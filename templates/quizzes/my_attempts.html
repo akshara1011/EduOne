@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}My Quiz Attempts — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'quizzes:list' %}">Quizzes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Attempt History</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">My Attempt History</h2>
+            <p class="text-muted small mb-0">Track your completed tests, score trends, and revision progress</p>
+        </div>
+        <a href="{% url 'quizzes:list' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-play me-1"></i> Practice New Quiz
+        </a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 surface-lavender">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-dark shadow-xs">
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_count }}</h3>
+                        <span class="text-muted small">Completed Mock Examinations</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 surface-sage">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-success shadow-xs">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-success">{{ avg_score }}</h3>
+                        <span class="text-muted small">Average Raw Score Achieved</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attempts Table Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Examination Records</h5>
+            <span class="badge bg-light text-muted">{{ total_count }} Records</span>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Quiz Title</th>
+                            <th>Subject</th>
+                            <th>Score Result</th>
+                            <th>Date</th>
+                            <th class="pe-4 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in attempts %}
+                        <tr>
+                            <td class="ps-4">
+                                <strong class="text-dark d-block">{{ a.quiz.title }}</strong>
+                                <span class="text-muted" style="font-size: 0.75rem;">{{ a.quiz.get_quiz_type_display }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem;">
+                                    {{ a.quiz.subject.name }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if a.passed %}bg-success{% else %}bg-warning{% endif %} px-2 py-1">
+                                    {{ a.percentage }}% &bull; {% if a.passed %}Passed{% else %}Practice Needed{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-muted small">
+                                {{ a.completed_at|date:'d M Y' }}
+                            </td>
+                            <td class="pe-4 text-end">
+                                <a href="{% url 'quizzes:results' a.id %}" class="btn btn-secondary btn-sm">
+                                    Review Diagnostic <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-5 text-center text-muted">
+                                <div class="edu-empty-icon mx-auto mb-2">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <h6 class="fw-bold">No completed attempts recorded yet</h6>
+                                <p class="text-muted small mb-3">Take a practice quiz to generate performance analytics.</p>
+                                <a href="{% url 'quizzes:list' %}" class="btn btn-primary btn-sm">
+                                    Browse Quizzes
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

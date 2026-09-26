@@ -1,0 +1,91 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Video Lectures{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Curated Video Lectures</h1>
+            <p class="text-secondary small mb-0">High-quality YouTube video explanations linked to engineering syllabus subjects.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:video_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Video Lecture
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Preview</th>
+                        <th>Title &amp; Channel</th>
+                        <th>Subject &amp; Unit</th>
+                        <th>Type &amp; Level</th>
+                        <th>Verification</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for video in videos %}
+                    <tr>
+                        <td>
+                            {% if video.thumbnail_url %}
+                                <a href="{{ video.youtube_url }}" target="_blank">
+                                    <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="rounded border" style="width: 100px; height: 60px; object-fit: cover;">
+                                </a>
+                            {% else %}
+                                <div class="bg-light rounded border d-flex align-items-center justify-content-center text-muted" style="width: 100px; height: 60px;">
+                                    <i class="fab fa-youtube text-danger fs-4"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ video.title }}</div>
+                            <div class="small text-muted">
+                                {% if video.channel_name %}<i class="fas fa-user-circle me-1"></i> {{ video.channel_name }} &bull; {% endif %}
+                                <a href="{{ video.youtube_url }}" target="_blank" class="text-danger text-decoration-none">
+                                    <i class="fab fa-youtube me-1"></i> Watch on YouTube
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ video.subject.subject_code }} — {{ video.subject.name }}</div>
+                            {% if video.unit %}
+                                <div class="text-secondary small">Unit {{ video.unit.unit_number }}: {{ video.unit.name }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border text-capitalize">{{ video.video_type }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary text-capitalize">{{ video.difficulty }}</span>
+                        </td>
+                        <td>
+                            {% if video.is_verified %}
+                                <span class="badge bg-success-subtle text-success"><i class="fas fa-check-circle me-1"></i> Verified</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">Unverified</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:video_edit' pk=video.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:video_delete' pk=video.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No video lectures added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

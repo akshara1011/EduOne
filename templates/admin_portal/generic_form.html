@@ -1,0 +1,88 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}{{ title|default:"Edit Item" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            
+            <div class="admin-card">
+                <!-- Card Header -->
+                <div class="p-4 border-bottom bg-light">
+                    <h1 class="h4 fw-bold text-dark mb-1">{{ title }}</h1>
+                    {% if subtitle %}
+                        <p class="text-secondary small mb-0">{{ subtitle }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Card Body Form -->
+                <div class="p-4">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2 px-3 small border-0 mb-4">
+                            {% for error in form.non_field_errors %}
+                                <div><i class="fas fa-circle-exclamation me-1"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            {% for field in form %}
+                            <div class="{% if field.field.widget.input_type == 'textarea' or field.name == 'name' or field.name == 'title' or field.name == 'question_text' or field.name == 'solution_text' %}col-12{% else %}col-md-6{% endif %}">
+                                
+                                {% if field.field.widget.input_type == 'checkbox' %}
+                                    <div class="form-check mt-4 pt-2">
+                                        {{ field }}
+                                        <label class="form-check-label fw-bold text-dark ms-1" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                        </label>
+                                        {% if field.help_text %}
+                                            <div class="form-text small">{{ field.help_text }}</div>
+                                        {% endif %}
+                                        {% if field.errors %}
+                                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <label class="form-label fw-bold text-dark small mb-1" for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <div class="form-text small text-muted">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                    {% endif %}
+                                {% endif %}
+
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex align-items-center justify-content-end gap-2 mt-4 pt-3 border-top">
+                            {% if cancel_link %}
+                                <a href="{{ cancel_link }}" class="btn btn-light border px-4">Cancel</a>
+                            {% elif cancel_url %}
+                                <a href="{% url cancel_url %}" class="btn btn-light border px-4">Cancel</a>
+                            {% else %}
+                                <button type="button" onclick="history.back()" class="btn btn-light border px-4">Cancel</button>
+                            {% endif %}
+                            <button type="submit" class="btn btn-admin-primary px-4">
+                                <i class="fas fa-check me-1"></i> {{ submit_text|default:"Save Changes" }}
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Video Lectures Library — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Curated Video Lectures 🎥</h2>
+            <p class="text-muted small mb-0">High-yield lectures and problem-solving sessions mapped to syllabus topics</p>
+        </div>
+        <a href="{% url 'resources:notes' %}" class="btn btn-secondary btn-sm">
+            Study Notes Library →
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <form class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-peach" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <select name="subject" class="form-select form-select-sm">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="difficulty" class="form-select form-select-sm">
+                    <option value="">All Difficulty Levels</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    Filter Lectures
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Visual Content Library Grid -->
+    <div class="row g-4">
+        {% for video in videos %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover overflow-hidden">
+                <!-- Thumbnail -->
+                {% if video.thumbnail_url %}
+                <div class="position-relative">
+                    <img src="{{ video.thumbnail_url }}" class="w-100" style="height: 195px; object-fit: cover;" alt="{{ video.title }}">
+                    <a href="{{ video.youtube_url }}" target="_blank" rel="noopener" class="position-absolute top-50 start-50 translate-middle btn btn-light rounded-circle shadow" style="width: 48px; height: 48px; padding: 0;">
+                        <i class="fas fa-play text-dark" style="margin-left: 2px;"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="surface-peach d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <span style="font-size: 3rem;">🎥</span>
+                </div>
+                {% endif %}
+
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <!-- Header with badges -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary font-monospace">{{ video.subject.subject_code }}</span>
+                            <span class="badge bg-light text-muted">{{ video.get_video_type_display }}</span>
+                        </div>
+
+                        <!-- Card text details -->
+                        <span class="text-muted small fw-bold d-block" style="font-size: 0.72rem; text-transform: uppercase;">{{ video.subject.name }}</span>
+                        <h5 class="fw-bold mb-1 text-dark">{{ video.title }}</h5>
+                        <p class="text-muted small mb-3">
+                            {% if video.channel_name %}{{ video.channel_name }}{% endif %}
+                            {% if video.unit %} &bull; Unit {{ video.unit.unit_number }}{% endif %}
+                        </p>
+                    </div>
+
+                    <div class="pt-2 border-top">
+                        <a href="{{ video.youtube_url }}" target="_blank" rel="noopener" class="btn btn-secondary w-100">
+                            Watch Lecture →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="edu-empty-state">
+                <div class="edu-empty-icon">
+                    🎥
+                </div>
+                <h5 class="fw-bold">No video lectures available</h5>
+                <p class="text-muted small mb-0">Video resources for this category are being curated.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

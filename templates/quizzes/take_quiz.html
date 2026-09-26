@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }} — Exam in Progress | ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 860px;">
+    <!-- Top Examination Bar -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="badge bg-secondary mb-1">Semester Examination</span>
+                <h4 class="fw-bold mb-0 text-dark">{{ quiz.title }}</h4>
+                <span class="text-muted small">{{ total_questions }} Questions &bull; Timed Session</span>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small d-none d-sm-inline">Time Remaining:</span>
+                <div id="timer" class="quiz-timer-pill">--:--</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress mt-3" style="height: 6px;">
+            <div id="progressBar" class="progress-bar" style="width: 0%;"></div>
+        </div>
+    </div>
+
+    <!-- Active Question Card -->
+    <div id="quizCard" class="card border-0 shadow-sm rounded-4 mb-3">
+        <div class="card-body p-4 p-md-5">
+            <div id="questionArea"></div>
+
+            <!-- Question Navigation Controls -->
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+                <button id="prevBtn" class="btn btn-secondary" type="button">
+                    <i class="fas fa-arrow-left me-1"></i> Previous
+                </button>
+                <button id="nextBtn" class="btn btn-primary" type="button">
+                    Next <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-Save Status Banner -->
+    <div class="text-center">
+        <small id="saveStatus" class="text-muted" style="font-size: 0.78rem;">
+            <i class="fas fa-shield-halved me-1 text-success"></i> Answers save automatically to cloud
+        </small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const questions = {{ questions_data|safe }};
+const savedAnswers = {{ saved_answers|default:'{}'|safe }};
+const timeRemainingInitial = {{ time_remaining }};
+const saveUrl = "{% url 'quizzes:save_answer' attempt.id %}";
+const submitUrl = "{% url 'quizzes:submit_quiz' attempt.id %}";
+const csrfToken = "{{ csrf_token }}";
+
+let index = 0;
+let answers = {...savedAnswers};
+let remaining = timeRemainingInitial;
+let startedAt = Date.now();
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+}
+
+function render() {
+    const q = questions[index];
+    const total = questions.length;
+    
+    document.getElementById('questionArea').innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge surface-gray text-dark">Question ${index + 1} of ${total}</span>
+            <span class="badge bg-light text-muted">${q.marks} Mark(s)</span>
+        </div>
+        <h4 class="fw-bold text-dark mt-2 mb-4" style="line-height: 1.45;">${esc(q.text)}</h4>
+        <div class="mt-4">${renderOptions(q)}</div>
+    `;
+
+    document.getElementById('prevBtn').disabled = (index === 0);
+    document.getElementById('nextBtn').innerHTML = (index === total - 1)
+        ? '<i class="fas fa-check-circle me-1"></i> Submit Quiz'
+        : 'Next <i class="fas fa-arrow-right ms-1"></i>';
+
+    document.getElementById('progressBar').style.width = (((index + 1) / total) * 100) + '%';
+
+    // Highlight selected option visually
+    document.querySelectorAll('.quiz-option input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('selected'));
+            if (this.checked) {
+                this.closest('.quiz-option').classList.add('selected');
+            }
+        });
+    });
+}
+
+function renderOptions(q) {
+    if (q.type === 'fill') {
+        return `<input id="fillAnswer" class="form-control form-control-lg" value="${esc(answers[q.id] || '')}" placeholder="Type your answer here...">`;
+    }
+    const opts = q.options || {};
+    return Object.keys(opts).map(k => {
+        const isChecked = (answers[q.id] === k);
+        return `
+            <label class="quiz-option ${isChecked ? 'selected' : ''}">
+                <input class="form-check-input mt-1" type="radio" name="answer" value="${esc(k)}" ${isChecked ? 'checked' : ''}>
+                <div class="flex-grow-1">
+                    <strong class="me-2 text-dark">${esc(k)}.</strong>
+                    <span>${esc(opts[k])}</span>
+                </div>
+            </label>
+        `;
+    }).join('');
+}
+
+function currentAnswer() {
+    const q = questions[index];
+    if (q.type === 'fill') {
+        return document.getElementById('fillAnswer')?.value || '';
+    }
+    return document.querySelector('input[name="answer"]:checked')?.value || '';
+}
+
+async function saveCurrent() {
+    const q = questions[index];
+    const a = currentAnswer();
+    answers[q.id] = a;
+    document.getElementById('saveStatus').innerHTML = '<i class="fas fa-spinner fa-spin me-1 text-dark"></i> Saving answer…';
+    try {
+        await fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ question_id: q.id, answer: a })
+        });
+        document.getElementById('saveStatus').innerHTML = '<i class="fas fa-circle-check me-1 text-success"></i> Answer saved securely';
+    } catch(e) {
+        document.getElementById('saveStatus').innerHTML = '<i class="fas fa-check me-1 text-muted"></i> Saved locally';
+    }
+}
+
+async function submit() {
+    await saveCurrent();
+    document.getElementById('nextBtn').disabled = true;
+    document.getElementById('prevBtn').disabled = true;
+    document.getElementById('nextBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting…';
+
+    const timeTaken = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+    try {
+        const r = await fetch(submitUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ answers, time_taken: timeTaken })
+        });
+        const data = await r.json();
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.error || 'Unable to submit exam.');
+            document.getElementById('nextBtn').disabled = false;
+        }
+    } catch(e) {
+        alert('Submission network error. Please try again.');
+        document.getElementById('nextBtn').disabled = false;
+    }
+}
+
+document.getElementById('prevBtn').onclick = async () => {
+    await saveCurrent();
+    if (index > 0) {
+        index--;
+        render();
+    }
+};
+
+document.getElementById('nextBtn').onclick = async () => {
+    if (index === questions.length - 1) {
+        if (confirm('Are you ready to submit your exam now?')) {
+            await submit();
+        }
+    } else {
+        await saveCurrent();
+        index++;
+        render();
+    }
+};
+
+const timer = setInterval(() => {
+    remaining--;
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    document.getElementById('timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    if (remaining <= 0) {
+        clearInterval(timer);
+        submit();
+    }
+}, 1000);
+
+function setTimer() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    document.getElementById('timer').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+setTimer();
+render();
+</script>
+{% endblock %}

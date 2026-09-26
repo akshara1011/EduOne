@@ -1,0 +1,32 @@
+{% comment %}
+    ErVeda Reusable Student Avatar
+
+    Usage:
+    {% include "components/avatar.html" with avatar_user=request.user avatar_size="sm" %}
+
+    Sizes:
+    sm = navbar avatar
+    md = dropdown/profile avatar
+    lg = profile page avatar
+{% endcomment %}
+
+{% if avatar_user %}
+    {% with u=avatar_user %}
+        {% include "components/avatar_svg.html" with u=u avatar_size=avatar_size %}
+    {% endwith %}
+
+{% elif student %}
+    {% with u=student %}
+        {% include "components/avatar_svg.html" with u=u avatar_size=avatar_size %}
+    {% endwith %}
+
+{% elif user %}
+    {% with u=user %}
+        {% include "components/avatar_svg.html" with u=u avatar_size=avatar_size %}
+    {% endwith %}
+
+{% else %}
+    {% with u=request.user %}
+        {% include "components/avatar_svg.html" with u=u avatar_size=avatar_size %}
+    {% endwith %}
+{% endif %}

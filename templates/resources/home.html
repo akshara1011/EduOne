@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Visual Learning Library — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <span class="badge surface-lavender text-dark mb-2 px-3 py-2" style="font-size: 0.78rem;">ACADEMIC REPOSITORY</span>
+        <h1 class="fw-bold mb-2">Visual Learning Library</h1>
+        <p class="text-muted" style="max-width: 600px; margin: 0 auto;">
+            Curated notes, verified video lectures, past university question papers, and high-yield study materials organized by branch and semester.
+        </p>
+    </div>
+
+    <!-- 4 Major Resource Pillar Cards -->
+    <div class="row g-4 mb-5">
+        <!-- 1. Notes & PDFs -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border h-100 card-hover surface-lavender">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="visual-tool-icon-wrap bg-white mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                            📚
+                        </div>
+                        <h5 class="fw-bold mb-1 text-dark">Study Notes</h5>
+                        <p class="small text-muted mb-3">Unit-wise typed notes, condensed formulas, and quick revision slides.</p>
+                        <span class="badge bg-white text-dark border mb-3">{{ notes_count }} Documents</span>
+                    </div>
+                    <div>
+                        <a href="{% url 'resources:notes' %}" class="btn btn-secondary w-100">
+                            Explore Notes →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Video Lectures -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border h-100 card-hover surface-sage">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="visual-tool-icon-wrap bg-white mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                            🎬
+                        </div>
+                        <h5 class="fw-bold mb-1 text-dark">Video Lectures</h5>
+                        <p class="small text-muted mb-3">Curated YouTube and university lectures mapped unit by unit.</p>
+                        <span class="badge bg-white text-dark border mb-3">{{ videos_count }} Curated Videos</span>
+                    </div>
+                    <div>
+                        <a href="{% url 'resources:videos' %}" class="btn btn-secondary w-100">
+                            Watch Lectures →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Previous Year Question Papers -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border h-100 card-hover surface-yellow">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="visual-tool-icon-wrap bg-white mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                            📝
+                        </div>
+                        <h5 class="fw-bold mb-1 text-dark">PYQ Papers</h5>
+                        <p class="small text-muted mb-3">University end-semester examination papers with question breakdowns.</p>
+                        <span class="badge bg-white text-dark border mb-3">{{ pyqs_count }} Verified Papers</span>
+                    </div>
+                    <div>
+                        <a href="{% url 'pyqs:list' %}" class="btn btn-secondary w-100">
+                            Browse PYQs →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. High-Yield Question Bank -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card border h-100 card-hover surface-peach">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="visual-tool-icon-wrap bg-white mb-3" style="width: 48px; height: 48px; font-size: 1.4rem;">
+                            ⭐
+                        </div>
+                        <h5 class="fw-bold mb-1 text-dark">Important Questions</h5>
+                        <p class="small text-muted mb-3">AI-ranked repetitive questions scored by university exam frequency.</p>
+                        <span class="badge bg-white text-dark border mb-3">High Yield Bank</span>
+                    </div>
+                    <div>
+                        <a href="{% url 'pyqs:important' %}" class="btn btn-secondary w-100">
+                            View Important →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Study Notes Section -->
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-white border-bottom pt-4 px-4 pb-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">Featured Study Notes</h5>
+                <p class="text-muted small mb-0">High-rated notes verified for curriculum relevance</p>
+            </div>
+            <a href="{% url 'resources:notes' %}" class="btn btn-secondary btn-sm">
+                All Notes →
+            </a>
+        </div>
+        <div class="card-body p-4">
+            {% if recent_notes %}
+            <div class="row g-3">
+                {% for note in recent_notes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border p-3 card-hover h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge surface-lavender text-dark" style="font-size: 0.7rem;">{{ note.subject.name|truncatewords:2 }}</span>
+                                {% if note.unit %}<span class="badge bg-light text-muted" style="font-size: 0.68rem;">Unit {{ note.unit.unit_number }}</span>{% endif %}
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">{{ note.title }}</h6>
+                            {% if note.topic %}
+                            <p class="text-muted small mb-2" style="font-size: 0.78rem;">{{ note.topic.name }}</p>
+                            {% endif %}
+                            <p class="small text-muted mb-3" style="font-size: 0.78rem;">
+                                {{ note.description|default:"Comprehensive unit study material and revision notes."|truncatewords:14 }}
+                            </p>
+                        </div>
+                        <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted" style="font-size: 0.72rem;">
+                                <i class="fas fa-file-pdf me-1 text-danger"></i> PDF Document
+                            </span>
+                            {% if note.pdf_file %}
+                            <a href="{% url 'resources:download_note' note.id %}" class="btn btn-primary btn-sm">
+                                Open Notes →
+                            </a>
+                            {% else %}
+                            <a href="{% url 'resources:notes' %}" class="btn btn-secondary btn-sm">
+                                View Details →
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="edu-empty-state my-4">
+                <div class="edu-empty-icon">📚</div>
+                <h6 class="fw-bold">No notes available yet</h6>
+                <p class="text-muted small">Approved study materials will appear here once uploaded.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Curated Video Lectures Section -->
+    {% if recent_videos %}
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 px-4 pb-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">Curated Video Lectures</h5>
+                <p class="text-muted small mb-0">Top-rated visual explanations mapped to syllabus units</p>
+            </div>
+            <a href="{% url 'resources:videos' %}" class="btn btn-secondary btn-sm">
+                All Videos →
+            </a>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% for video in recent_videos %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border p-3 card-hover h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="surface-sage rounded-3 p-3 text-center mb-3">
+                                <span style="font-size: 2rem;">📺</span>
+                                <div class="badge bg-white text-dark mt-2 border" style="font-size: 0.68rem;">
+                                    {{ video.channel_name|default:"YouTube Lecture" }}
+                                </div>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">{{ video.title|truncatewords:6 }}</h6>
+                            <p class="small text-muted mb-2" style="font-size: 0.78rem;">
+                                {{ video.subject.name }} {% if video.unit %}• Unit {{ video.unit.unit_number }}{% endif %}
+                            </p>
+                        </div>
+                        <div class="pt-2 border-top">
+                            {% if video.youtube_url %}
+                            <a href="{{ video.youtube_url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm w-100">
+                                Watch Lecture →
+                            </a>
+                            {% else %}
+                            <a href="{% url 'resources:videos' %}" class="btn btn-secondary btn-sm w-100">
+                                View Lecture →
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

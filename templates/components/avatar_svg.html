@@ -1,0 +1,34 @@
+{% load static %}
+{% if u %}
+<div class="edu-avatar edu-avatar-{{ avatar_size|default:'sm' }}{% if u.gender %} edu-avatar-gender-{{ u.gender }}{% endif %}"
+     title="{{ u.get_full_name|default:u.username|default:'Student' }}{% if u.gender %} • {{ u.gender|title }}{% endif %}"
+     data-gender="{{ u.gender|default:'neutral' }}">
+    {% if u.profile_photo %}
+        <img src="{{ u.profile_photo.url }}" 
+             alt="{{ u.display_name|default:'Student' }}"
+             class="edu-avatar-image"
+             loading="lazy"
+             onerror="this.onerror=null; this.src='{% if u.gender == 'female' %}{% static 'images/avatars/avatar_female.png' %}{% else %}{% static 'images/avatars/avatar_male.png' %}{% endif %}';">
+    {% elif u.gender == 'female' %}
+        <img src="{% static 'images/avatars/avatar_female.png' %}" 
+             alt="{{ u.display_name|default:'Student' }} (Female)"
+             class="edu-avatar-image"
+             loading="lazy">
+    {% elif u.gender == 'male' %}
+        <img src="{% static 'images/avatars/avatar_male.png' %}" 
+             alt="{{ u.display_name|default:'Student' }} (Male)"
+             class="edu-avatar-image"
+             loading="lazy">
+    {% elif u.first_name|lower == 'akshara' or u.username|lower == 'akshara' or u.username|lower == 'akshara1011' or u.username|lower == 'akshara_1011' %}
+        <img src="{% static 'images/avatars/avatar_female.png' %}" 
+             alt="{{ u.display_name|default:'Student' }} (Female)"
+             class="edu-avatar-image"
+             loading="lazy">
+    {% else %}
+        <img src="{% static 'images/avatars/avatar_default.png' %}" 
+             alt="{{ u.display_name|default:'Student' }}"
+             class="edu-avatar-image"
+             loading="lazy">
+    {% endif %}
+</div>
+{% endif %}

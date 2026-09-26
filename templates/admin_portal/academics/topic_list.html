@@ -1,0 +1,85 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Topics Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Curriculum Topics</h1>
+            <p class="text-secondary small mb-0">Granular syllabus topics mapped to units for AI question solving &amp; notes.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:topic_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Topic
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter by Unit -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <select name="unit" class="form-select">
+                    <option value="">All Units (Showing all topics)</option>
+                    {% for u in units %}
+                        <option value="{{ u.id }}" {% if unit_id|stringformat:"s" == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.subject.subject_code }} &bull; Unit {{ u.unit_number }}: {{ u.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-admin-primary flex-grow-1">Filter</button>
+                {% if unit_id %}
+                    <a href="{% url 'admin_portal:topic_list' %}" class="btn btn-light border">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Order</th>
+                        <th>Topic Name</th>
+                        <th>Unit &amp; Subject</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for topic in topics %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-secondary border font-monospace">#{{ topic.order }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ topic.name }}</div>
+                            {% if topic.description %}<div class="text-muted small">{{ topic.description|truncatechars:90 }}</div>{% endif %}
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">Unit {{ topic.unit.unit_number }}: {{ topic.unit.name }}</div>
+                            <div class="text-secondary small">{{ topic.unit.subject.subject_code }} — {{ topic.unit.subject.name }}</div>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:topic_edit' pk=topic.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:topic_delete' pk=topic.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">No topics found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

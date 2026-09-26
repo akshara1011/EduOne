@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}{{ subject.name }} — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'academics:syllabus_home' %}">Syllabus</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ subject.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-2">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary font-monospace">{{ subject.subject_code }}</span>
+                    <span class="badge bg-primary">{{ subject.credits }} Credits</span>
+                    <span class="badge bg-light text-muted">{{ subject.get_subject_type_display }}</span>
+                </div>
+                <h2 class="fw-bold mb-1">{{ subject.name }}</h2>
+                {% if subject.description %}
+                <p class="text-muted small mb-0" style="max-width: 760px;">{{ subject.description }}</p>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'academics:subject_syllabus' subject.id %}" class="btn btn-secondary btn-sm">
+                    Full Syllabus →
+                </a>
+                <a href="{% url 'chatbot:new_chat' %}?subject={{ subject.id }}" class="btn btn-primary btn-sm">
+                    Ask AI on Subject →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Stats Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 p-3 surface-gray">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-dark shadow-xs">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ units|length }}</h4>
+                        <span class="text-muted small">Course Units</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 p-3 surface-sage">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-success shadow-xs">
+                        <i class="fas fa-file-lines"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ notes_count }}</h4>
+                        <span class="text-muted small">Study Notes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 p-3 surface-peach">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-warning shadow-xs">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ videos_count }}</h4>
+                        <span class="text-muted small">Lectures</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card border-0 p-3 surface-yellow">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-pill-icon bg-white text-warning shadow-xs">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ pyqs_count }}</h4>
+                        <span class="text-muted small">PYQ Papers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Units Catalog Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0">Syllabus Units</h5>
+                <p class="text-muted small mb-0">Select a unit to inspect topics, linked notes, and curated video lectures</p>
+            </div>
+            <span class="badge bg-light text-muted">{{ units|length }} Units</span>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="d-flex flex-column gap-3">
+                {% for unit in units %}
+                <a href="{% url 'academics:unit_detail' unit.id %}" class="card border p-3 card-hover text-decoration-none text-dark">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stat-pill-icon surface-gray text-dark flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.85rem; font-weight: 700;">
+                                {{ unit.unit_number }}
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Unit {{ unit.unit_number }}: {{ unit.name }}</h6>
+                                {% if unit.description %}
+                                <p class="text-muted small mb-2" style="line-height: 1.5;">{{ unit.description }}</p>
+                                {% endif %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-light text-muted" style="font-size: 0.72rem;">
+                                        <i class="fas fa-list-check me-1"></i>{{ unit.topics.all|length }} Topics
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn btn-secondary btn-sm flex-shrink-0 align-self-center">
+                            Open Unit →
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="edu-empty-state">
+                    <div class="edu-empty-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h6 class="fw-bold">No units cataloged yet</h6>
+                    <p class="text-muted small mb-0">Units for this subject are currently being organized.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

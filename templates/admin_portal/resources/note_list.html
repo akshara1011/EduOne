@@ -1,0 +1,147 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Study Notes Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Study Notes &amp; PDF Materials</h1>
+            <p class="text-secondary small mb-0">Manage chapter notes, hand-written materials, approvals, and student downloads.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:note_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-upload"></i> Upload Note
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Bar -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0" placeholder="Search by title or subject...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="subject" class="form-select">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                        <option value="{{ s.id }}" {% if subject_id|stringformat:"s" == s.id|stringformat:"s" %}selected{% endif %}>
+                            {{ s.subject_code }} - {{ s.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved Only</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-admin-primary flex-grow-1">Filter</button>
+                {% if query or status_filter or subject_id %}
+                    <a href="{% url 'admin_portal:note_list' %}" class="btn btn-light border">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Title &amp; Type</th>
+                        <th>Subject &amp; Unit</th>
+                        <th>Uploaded By</th>
+                        <th>Stats</th>
+                        <th>Approval</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in page_obj %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ note.title }}</div>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="badge bg-light text-dark border text-capitalize">{{ note.get_note_type_display }}</span>
+                                {% if note.pdf_file %}
+                                    <a href="{{ note.pdf_file.url }}" target="_blank" class="small text-primary text-decoration-none">
+                                        <i class="fas fa-file-pdf me-1 text-danger"></i> View PDF
+                                    </a>
+                                {% else %}
+                                    <span class="small text-muted">No file</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ note.subject.subject_code }} — {{ note.subject.name }}</div>
+                            {% if note.unit %}
+                                <div class="text-secondary small">Unit {{ note.unit.unit_number }}: {{ note.unit.name }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if note.uploaded_by %}
+                                <span class="badge bg-light text-dark border">{{ note.uploaded_by.display_name }}</span>
+                            {% else %}
+                                <span class="text-muted small">System</span>
+                            {% endif %}
+                            <div class="text-muted small">{{ note.created_at|date:"M d, Y" }}</div>
+                        </td>
+                        <td>
+                            <div class="small text-secondary"><i class="fas fa-eye me-1"></i> {{ note.view_count }} views</div>
+                            <div class="small text-secondary"><i class="fas fa-download me-1"></i> {{ note.download_count }} downloads</div>
+                        </td>
+                        <td>
+                            {% if note.is_approved %}
+                                <a href="{% url 'admin_portal:note_toggle_approve' pk=note.id %}" class="badge bg-success-subtle text-success text-decoration-none" title="Click to move to pending">
+                                    <i class="fas fa-check-circle me-1"></i> Approved
+                                </a>
+                            {% else %}
+                                <a href="{% url 'admin_portal:note_toggle_approve' pk=note.id %}" class="badge bg-warning-subtle text-warning text-decoration-none" title="Click to approve">
+                                    <i class="fas fa-clock me-1"></i> Pending
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:note_edit' pk=note.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:note_delete' pk=note.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No notes found matching your criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="p-3 border-top d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if subject_id %}&subject={{ subject_id }}{% endif %}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if subject_id %}&subject={{ subject_id }}{% endif %}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

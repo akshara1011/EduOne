@@ -1,0 +1,85 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Quizzes &amp; Tests{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Quizzes &amp; Mock Tests</h1>
+            <p class="text-secondary small mb-0">Create and curate practice assessments, mock tests, and subject quizzes.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:quiz_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Create Quiz
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Subject &amp; Type</th>
+                        <th>Format &amp; Time</th>
+                        <th>Questions</th>
+                        <th>Attempts</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quiz in quizzes %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark fs-6">{{ quiz.title }}</div>
+                            <span class="badge bg-secondary-subtle text-secondary text-capitalize">{{ quiz.get_difficulty_display }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ quiz.subject.subject_code }} — {{ quiz.subject.name }}</div>
+                            <span class="badge bg-light text-dark border">{{ quiz.get_quiz_type_display }}</span>
+                        </td>
+                        <td>
+                            <div class="small text-secondary"><i class="fas fa-clock me-1"></i> {{ quiz.time_limit_minutes }} mins</div>
+                            <div class="small text-secondary"><i class="fas fa-bullseye me-1"></i> Pass: {{ quiz.pass_marks }}/{{ quiz.total_marks }}</div>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_portal:quiz_question_list' quiz_id=quiz.id %}" class="badge bg-primary-subtle text-primary text-decoration-none py-1 px-2">
+                                <i class="fas fa-list-ol me-1"></i> {{ quiz.q_count }} Questions &rarr;
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ quiz.attempt_count }} Attempts</span>
+                        </td>
+                        <td>
+                            {% if quiz.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:quiz_question_list' quiz_id=quiz.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Manage Questions">
+                                <i class="fas fa-list-check text-info"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:quiz_edit' pk=quiz.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:quiz_delete' pk=quiz.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No quizzes created yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

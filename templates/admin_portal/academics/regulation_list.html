@@ -1,0 +1,72 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Academic Regulations{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Academic Regulations &amp; Schemes</h1>
+            <p class="text-secondary small mb-0">Curriculum patterns linked to university programs (e.g. JNTUH R22, VTU 2021 Scheme).</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:regulation_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add Regulation
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>University</th>
+                        <th>Regulation Name</th>
+                        <th>Year</th>
+                        <th>Semesters Configured</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in regulations %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ reg.university.short_name }}</div>
+                            <div class="text-muted small">{{ reg.university.name|truncatechars:35 }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-dark fs-6">{{ reg.name }}</span>
+                        </td>
+                        <td>{{ reg.year }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ reg.sem_count }} Semesters</span></td>
+                        <td>
+                            {% if reg.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:regulation_edit' pk=reg.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:regulation_delete' pk=reg.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No regulations added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

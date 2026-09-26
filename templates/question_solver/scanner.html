@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% block title %}Snap a Question — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 880px;">
+    <!-- Hero Header -->
+    <div class="text-center mb-4">
+        <span class="badge bg-peach mb-2">Multimodal AI Solver</span>
+        <h2 class="display-6 fw-bold mb-2">Snap a question. Get a solution.</h2>
+        <p class="lead text-muted mb-0" style="max-width: 580px; margin: 0 auto;">
+            Upload a question and let ErVeda break it down step by step with syllabus grounding.
+        </p>
+    </div>
+
+    <!-- ═══════════════ VISUAL WORKFLOW ROADMAP ═══════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-gray">
+        <div class="d-flex align-items-center justify-content-between text-center px-lg-3 px-1 py-1">
+            <div class="d-flex flex-column align-items-center">
+                <div class="stat-pill-icon bg-white text-dark mb-1 shadow-xs" style="width: 36px; height: 36px;">
+                    📸
+                </div>
+                <span class="fw-bold" style="font-size: 0.74rem;">Question detected</span>
+            </div>
+
+            <span class="text-muted opacity-50 mb-3" style="font-size: 0.85rem;">→</span>
+
+            <div class="d-flex flex-column align-items-center">
+                <div class="stat-pill-icon bg-white text-dark mb-1 shadow-xs" style="width: 36px; height: 36px;">
+                    📝
+                </div>
+                <span class="fw-bold" style="font-size: 0.74rem;">Step-by-step solution</span>
+            </div>
+
+            <span class="text-muted opacity-50 mb-3" style="font-size: 0.85rem;">→</span>
+
+            <div class="d-flex flex-column align-items-center">
+                <div class="stat-pill-icon bg-white text-dark mb-1 shadow-xs" style="width: 36px; height: 36px;">
+                    🏷️
+                </div>
+                <span class="fw-bold" style="font-size: 0.74rem;">Related topic</span>
+            </div>
+
+            <span class="text-muted opacity-50 mb-3" style="font-size: 0.85rem;">→</span>
+
+            <div class="d-flex flex-column align-items-center">
+                <div class="stat-pill-icon bg-white text-dark mb-1 shadow-xs" style="width: 36px; height: 36px;">
+                    📚
+                </div>
+                <span class="fw-bold" style="font-size: 0.74rem;">Related notes</span>
+            </div>
+
+            <span class="text-muted opacity-50 mb-3" style="font-size: 0.85rem;">→</span>
+
+            <div class="d-flex flex-column align-items-center">
+                <div class="stat-pill-icon bg-white text-dark mb-1 shadow-xs" style="width: 36px; height: 36px;">
+                    ⭐
+                </div>
+                <span class="fw-bold" style="font-size: 0.74rem;">Related PYQs</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ LARGE UPLOAD DROPZONE CARD ═══════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-md-5">
+            <!-- Dropzone Area -->
+            <div id="uploadArea" class="upload-dropzone mb-3 surface-peach">
+                <div style="font-size: 3rem;" class="mb-2" id="uploadIcon">📸</div>
+                <h4 class="fw-bold mb-2" id="uploadText">Upload or drop your question here</h4>
+                <p class="text-muted small mb-4">Take a clear photo of printed text, formulas, or handwritten questions (JPG, PNG, WEBP)</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('imageInput').click(); event.stopPropagation();">
+                    Choose Image →
+                </button>
+                <input type="file" id="imageInput" accept="image/*" class="d-none">
+            </div>
+
+            <!-- Image Preview -->
+            <div id="previewArea" class="d-none text-center mb-4">
+                <div class="position-relative d-inline-block">
+                    <img id="imagePreview" class="img-fluid rounded-3 border shadow-sm" style="max-height: 320px;" alt="Question Preview">
+                </div>
+                <div class="mt-3">
+                    <button onclick="resetUpload()" class="btn btn-secondary btn-sm">
+                        Choose Different Image
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Solve Button -->
+            <button id="solveBtn" onclick="uploadAndSolve()" class="btn btn-primary btn-lg w-100 d-none">
+                Solve Question with AI →
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ RESULT CARD ═══════════════ -->
+    <div id="resultCard" class="card border-0 shadow-sm rounded-4 mb-4 d-none">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                <span class="me-2">✓</span> AI Step-by-Step Solution
+            </h6>
+            <span class="badge bg-sage">Question Detected</span>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <!-- Loading Indicator -->
+            <div id="loadingState" class="text-center py-5 d-none">
+                <div class="spinner-border text-dark mb-3" style="width: 2.5rem; height: 2.5rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6 class="fw-bold mb-1">Gemini AI is reading and analyzing...</h6>
+                <p class="text-muted small mb-0">Detecting equations &bull; Mapping to syllabus &bull; Formulating steps</p>
+            </div>
+
+            <!-- Solution Content -->
+            <div id="solutionContent" class="d-none">
+                <div id="solutionText" class="p-4 bg-light rounded-3 mb-4" style="line-height: 1.75; font-size: 0.95rem;"></div>
+
+                <!-- Related Navigation Actions -->
+                <div class="row g-2 mb-4 pt-3 border-top">
+                    <div class="col-md-4">
+                        <a href="{% url 'chatbot:home' %}" class="card border p-3 h-100 card-hover text-decoration-none text-dark surface-sage">
+                            <span class="small fw-bold d-block mb-1">🤖 Related Topic Discussion</span>
+                            <span class="text-muted" style="font-size: 0.74rem;">Ask AI follow-up in chat →</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'resources:notes' %}" class="card border p-3 h-100 card-hover text-decoration-none text-dark surface-lavender">
+                            <span class="small fw-bold d-block mb-1">📚 Related Study Notes</span>
+                            <span class="text-muted" style="font-size: 0.74rem;">Review unit notes &amp; PDFs →</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'pyqs:important' %}" class="card border p-3 h-100 card-hover text-decoration-none text-dark surface-yellow">
+                            <span class="small fw-bold d-block mb-1">⭐ Related Exam PYQs</span>
+                            <span class="text-muted" style="font-size: 0.74rem;">Practice similar questions →</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-secondary" onclick="resetAll()">
+                        Scan Another Question →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ RECENT SCANS ═══════════════ -->
+    {% if recent_scans %}
+    <div class="mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-muted small mb-0" style="text-transform: uppercase; letter-spacing: 0.05em;">
+                Recent Scans
+            </h6>
+            <span class="badge bg-light text-muted">{{ recent_scans|length }}</span>
+        </div>
+
+        <div class="row g-2">
+            {% for scan in recent_scans %}
+            <div class="col-12">
+                <div class="card border p-3 card-hover">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if scan.image %}
+                        <img src="{{ scan.image.url }}" class="rounded-2 border" width="56" height="56" style="object-fit: cover;" alt="Question Scan">
+                        {% else %}
+                        <div class="stat-pill-icon surface-gray text-dark flex-shrink-0" style="width: 56px; height: 56px;">
+                            📸
+                        </div>
+                        {% endif %}
+
+                        <div class="flex-grow-1 min-w-0">
+                            <span class="text-muted" style="font-size: 0.72rem;">{{ scan.created_at|timesince }} ago</span>
+                            <p class="mb-0 small text-truncate text-dark fw-medium">
+                                {{ scan.ai_solution|default:'Scan uploaded'|truncatechars:110 }}
+                            </p>
+                        </div>
+
+                        <a href="{% url 'question_solver:result' scan.id %}" class="btn btn-secondary btn-sm flex-shrink-0">
+                            View Solution →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const UPLOAD_URL = "{% url 'question_solver:upload' %}";
+const CSRF = '{{ csrf_token }}';
+
+let selectedFile = null;
+
+// Click dropzone to trigger input
+document.getElementById('uploadArea').addEventListener('click', function(e) {
+    if (!selectedFile && e.target.tagName !== 'BUTTON') {
+        document.getElementById('imageInput').click();
+    }
+});
+
+// File selected
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    selectedFile = file;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        document.getElementById('imagePreview').src = evt.target.result;
+        document.getElementById('uploadArea').classList.add('d-none');
+        document.getElementById('previewArea').classList.remove('d-none');
+        document.getElementById('solveBtn').classList.remove('d-none');
+    };
+    reader.readAsDataURL(file);
+});
+
+// Drag and drop
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadArea.classList.add('border-dark');
+});
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('border-dark');
+});
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-dark');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        document.getElementById('imageInput').files = e.dataTransfer.files;
+        document.getElementById('imageInput').dispatchEvent(new Event('change'));
+    }
+});
+
+async function uploadAndSolve() {
+    if (!selectedFile) return;
+
+    document.getElementById('resultCard').classList.remove('d-none');
+    document.getElementById('loadingState').classList.remove('d-none');
+    document.getElementById('solutionContent').classList.add('d-none');
+    document.getElementById('solveBtn').disabled = true;
+    document.getElementById('solveBtn').innerHTML = 'Analyzing Question…';
+
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('csrfmiddlewaretoken', CSRF);
+
+    try {
+        const response = await fetch(UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF },
+            body: formData
+        });
+        const data = await response.json();
+
+        document.getElementById('loadingState').classList.add('d-none');
+        document.getElementById('solutionContent').classList.remove('d-none');
+
+        if (data.solution) {
+            document.getElementById('solutionText').innerHTML = renderSolutionMarkdown(data.solution);
+        } else {
+            document.getElementById('solutionText').innerHTML = `<div class="alert alert-danger mb-0">${escapeHtml(data.error || 'Failed to analyze question')}</div>`;
+        }
+    } catch (err) {
+        document.getElementById('loadingState').classList.add('d-none');
+        document.getElementById('solutionContent').classList.remove('d-none');
+        document.getElementById('solutionText').innerHTML = '<div class="alert alert-warning mb-0">Network error. Please try again.</div>';
+    }
+
+    document.getElementById('solveBtn').disabled = false;
+    document.getElementById('solveBtn').innerHTML = 'Solve Question with AI →';
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function renderSolutionMarkdown(text) {
+    let html = escapeHtml(text);
+    html = html.replace(/```([\s\S]*?)```/g, '<pre class="p-3 my-2 bg-dark text-white rounded-3"><code>$1</code></pre>');
+    html = html.replace(/^###\s(.+)$/gm, '<h6 class="fw-bold mt-3 mb-1 text-dark">$1</h6>');
+    html = html.replace(/^##\s(.+)$/gm, '<h5 class="fw-bold mt-3 mb-1 text-dark">$1</h5>');
+    html = html.replace(/^#\s(.+)$/gm, '<h4 class="fw-bold mt-3 mb-1 text-dark">$1</h4>');
+    html = html.replace(/\*\*([A-Z\s\/-]+):\*\*/g, '<div class="fw-bold text-dark border-bottom pb-1 mt-3 mb-2" style="font-size:0.88rem;letter-spacing:0.04em;">$1</div>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    html = html.replace(/^(\d+)\.\s(.+)$/gm, '<div class="ms-2 mb-1"><strong>$1.</strong> $2</div>');
+    html = html.replace(/^[-•*]\s(.+)$/gm, '<div class="ms-2 mb-1">&bull; $1</div>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function resetUpload() {
+    selectedFile = null;
+    document.getElementById('uploadArea').classList.remove('d-none');
+    document.getElementById('previewArea').classList.add('d-none');
+    document.getElementById('solveBtn').classList.add('d-none');
+    document.getElementById('imageInput').value = '';
+}
+
+function resetAll() {
+    resetUpload();
+    document.getElementById('resultCard').classList.add('d-none');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Study Notes Library — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Study Notes Library 📚</h2>
+            <p class="text-muted small mb-0">Verified university notes, unit summaries, and revision formula sheets</p>
+        </div>
+        <a href="{% url 'academics:syllabus_home' %}" class="btn btn-secondary btn-sm">
+            View Syllabus →
+        </a>
+    </div>
+
+    <!-- Filter Card -->
+    <form class="card border-0 shadow-sm rounded-4 p-3 mb-4 surface-lavender" method="get">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="subject" class="form-select form-select-sm">
+                    <option value="">All Subjects</option>
+                    {% for s in subjects %}
+                    <option value="{{ s.id }}" {% if filters.subject == s.id|stringformat:'s' %}selected{% endif %}>
+                        {{ s.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="unit" class="form-select form-select-sm">
+                    <option value="">All Units</option>
+                    {% for u in units %}
+                    <option value="{{ u.id }}" {% if filters.unit == u.id|stringformat:'s' %}selected{% endif %}>
+                        Unit {{ u.unit_number }} — {{ u.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input name="q" value="{{ filters.q|default:'' }}" class="form-control form-control-sm" placeholder="Search by note title or keyword...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    Filter Notes
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Visual Content Library Grid -->
+    <div class="row g-4">
+        {% for note in notes %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border card-hover">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <!-- Header with badges -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-secondary font-monospace">{{ note.subject.subject_code }}</span>
+                            <span class="badge bg-light text-muted">{{ note.get_note_type_display }}</span>
+                        </div>
+
+                        <!-- Visual Subject / Topic Banner -->
+                        <div class="p-3 rounded-3 surface-lavender mb-3">
+                            <span class="text-muted small fw-bold d-block" style="font-size: 0.72rem; text-transform: uppercase;">{{ note.subject.name }}</span>
+                            <h5 class="fw-bold mb-1 text-dark">{{ note.title }}</h5>
+                            <span class="text-muted small">
+                                {% if note.unit %}Unit {{ note.unit.unit_number }}{% endif %}
+                                {% if note.topic %} &bull; {{ note.topic.name }}{% endif %}
+                            </span>
+                        </div>
+
+                        {% if note.description %}
+                        <p class="small text-muted mb-3" style="line-height: 1.55;">
+                            {{ note.description|truncatewords:20 }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-3 border-top">
+                        {% if note.pdf_file %}
+                        <a href="{% url 'resources:download_note' note.id %}" target="_blank" class="btn btn-primary w-100">
+                            Open Notes →
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary w-100" disabled>
+                            File In Preparation
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="edu-empty-state">
+                <div class="edu-empty-icon">
+                    📚
+                </div>
+                <h5 class="fw-bold">No study notes match your criteria</h5>
+                <p class="text-muted small mb-3">Try adjusting your subject and unit filter options.</p>
+                <a href="{% url 'resources:notes' %}" class="btn btn-secondary btn-sm">
+                    Reset Filter
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

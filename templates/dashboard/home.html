@@ -1,0 +1,654 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+
+    <!-- ═══════════════ 1. WELCOME HERO BANNER (Real-Time Styling) ═══════════════ -->
+    <div class="card border-0 rounded-4 mb-4 shadow-sm overflow-hidden" 
+         style="background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 60%, #084298 100%); color: #ffffff;">
+        <div class="card-body p-4 p-md-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-4">
+                
+                <!-- Student Identity & Real-Time Greeting -->
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Gender-Based Student Avatar Icon -->
+                    <div class="position-relative flex-shrink-0">
+                        <div class="student-dashboard-avatar shadow">
+                            {% if student.profile_photo %}
+                                <img src="{{ student.profile_photo.url }}" alt="{{ student.display_name }}">
+                            {% elif student.gender == 'female' %}
+                                <img src="{% static 'images/avatars/avatar_female.png' %}" alt="Female Student">
+                            {% elif student.gender == 'male' %}
+                                <img src="{% static 'images/avatars/avatar_male.png' %}" alt="Male Student">
+                            {% elif student.first_name|lower == 'akshara' or student.username|lower == 'akshara' or student.username|lower == 'akshara1011' %}
+                                <img src="{% static 'images/avatars/avatar_female.png' %}" alt="Female Student">
+                            {% else %}
+                                <img src="{% static 'images/avatars/avatar_default.png' %}" alt="Student">
+                            {% endif %}
+                        </div>
+                        <span class="active-pulse-dot" title="Active Session"></span>
+                    </div>
+
+                    <div>
+                        <!-- Real-time Live Status Pill -->
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="realtime-status-pill">
+                                <span class="pulse-indicator-dot"></span>
+                                <span id="realtimeLiveText">Real-time Session</span>
+                            </span>
+                            <span class="small text-white text-opacity-75" id="realtimeDateText"></span>
+                        </div>
+
+                        <!-- Greeting Headline with Gender Badge -->
+                        <h2 class="text-white fw-bold mb-1 d-flex align-items-center gap-2 flex-wrap" style="font-size: 1.65rem; letter-spacing: -0.02em;">
+                            <span id="realtimeGreeting">Welcome back</span>, {{ student.first_name|default:student.display_name }}!
+                            {% if student.gender == 'female' %}
+                                <span class="hero-gender-badge female" title="Female Student"><i class="fas fa-venus me-1"></i>Female</span>
+                            {% elif student.gender == 'male' %}
+                                <span class="hero-gender-badge male" title="Male Student"><i class="fas fa-mars me-1"></i>Male</span>
+                            {% endif %}
+                            <span class="d-inline-block" style="animation: wave 2.5s infinite; transform-origin: 70% 70%;">👋</span>
+                        </h2>
+
+                        <!-- Academic Details Bar -->
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                            {% if student.university %}
+                                <span class="academic-tag bg-white text-dark font-monospace fw-bold">
+                                    {{ student.university.short_name }}
+                                </span>
+                                <span class="academic-tag bg-white bg-opacity-25 text-white fw-semibold">
+                                    {{ student.branch.short_name }}
+                                </span>
+                                <span class="academic-tag bg-white bg-opacity-25 text-white fw-semibold">
+                                    Semester {{ student.current_semester }}
+                                </span>
+                                {% if student.regulation %}
+                                <span class="academic-tag bg-white bg-opacity-15 text-white">
+                                    {{ student.regulation.name }}
+                                </span>
+                                {% endif %}
+                                {% if student.college_name %}
+                                <span class="text-white text-opacity-75 small d-none d-lg-inline ms-1">
+                                    • {{ student.college_name|truncatechars:35 }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'accounts:setup_profile' %}" class="btn btn-warning btn-sm fw-bold">
+                                    Complete Profile →
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 High-Contrast Real-Time Stat Badges -->
+                <div class="d-flex gap-2.5 flex-wrap">
+                    <div class="hero-stat-box">
+                        <i class="fas fa-fire fs-5 text-warning mb-1"></i>
+                        <span class="hero-stat-val">{{ student.study_streak }}d</span>
+                        <span class="hero-stat-lbl">Streak</span>
+                    </div>
+                    <div class="hero-stat-box">
+                        <i class="fas fa-robot fs-5 text-info mb-1"></i>
+                        <span class="hero-stat-val">{{ questions_asked }}</span>
+                        <span class="hero-stat-lbl">AI Queries</span>
+                    </div>
+                    <div class="hero-stat-box">
+                        <i class="fas fa-circle-check fs-5 text-success mb-1"></i>
+                        <span class="hero-stat-val">{{ total_quizzes }}</span>
+                        <span class="hero-stat-lbl">Quizzes Done</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ 2. QUICK ACTION TOOLS (Clean, Modern & High Contrast) ═══════════════ -->
+    <div class="row g-3 mb-4">
+        <!-- 1. AI Chatbot -->
+        <div class="col-6 col-md-3">
+            <a href="{% url 'chatbot:home' %}" class="student-action-card h-100 text-decoration-none">
+                <div class="action-icon-circle bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="mt-3">
+                    <div class="action-card-title text-dark">AI Chatbot</div>
+                    <div class="action-card-desc text-muted">Syllabus-aware Q&amp;A</div>
+                </div>
+                <div class="action-card-footer text-primary fw-semibold mt-2">
+                    Start Chat <i class="fas fa-arrow-right ms-1"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- 2. Scan Question -->
+        <div class="col-6 col-md-3">
+            <a href="{% url 'question_solver:home' %}" class="student-action-card h-100 text-decoration-none">
+                <div class="action-icon-circle bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div class="mt-3">
+                    <div class="action-card-title text-dark">Scan Question</div>
+                    <div class="action-card-desc text-muted">Instant step solutions</div>
+                </div>
+                <div class="action-card-footer text-success fw-semibold mt-2">
+                    Scan Photo <i class="fas fa-arrow-right ms-1"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- 3. PYQ Papers -->
+        <div class="col-6 col-md-3">
+            <a href="/pyqs/" class="student-action-card h-100 text-decoration-none">
+                <div class="action-icon-circle bg-warning bg-opacity-15 text-warning-emphasis">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="mt-3">
+                    <div class="action-card-title text-dark">PYQ Papers</div>
+                    <div class="action-card-desc text-muted">University past exams</div>
+                </div>
+                <div class="action-card-footer text-warning-emphasis fw-semibold mt-2">
+                    Browse PYQs <i class="fas fa-arrow-right ms-1"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- 4. Practice Quiz -->
+        <div class="col-6 col-md-3">
+            <a href="/quizzes/" class="student-action-card h-100 text-decoration-none">
+                <div class="action-icon-circle bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="mt-3">
+                    <div class="action-card-title text-dark">Practice Quiz</div>
+                    <div class="action-card-desc text-muted">Timed mock tests</div>
+                </div>
+                <div class="action-card-footer text-danger fw-semibold mt-2">
+                    Take Quiz <i class="fas fa-arrow-right ms-1"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══════════════ 3. MAIN CONTENT: SUBJECTS & SIDEBAR ═══════════════ -->
+    <div class="row g-4">
+
+        <!-- ═══ LEFT: Subjects Catalog ═══ -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                            <i class="fas fa-book-open text-primary me-2"></i>
+                            {% if semester %}
+                                Semester {{ semester.semester_number }} Subjects
+                            {% else %}
+                                Your Subjects
+                            {% endif %}
+                        </h5>
+                        <small class="text-muted">Click any subject to access syllabus units and study notes</small>
+                    </div>
+
+                    <!-- Instant Subject Quick Search -->
+                    <div class="subject-search-wrap">
+                        <i class="fas fa-search search-icon text-muted"></i>
+                        <input type="text" id="subjectFilterInput" placeholder="Filter subjects..." class="form-control form-control-sm">
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if subjects %}
+                    <div class="row g-3" id="subjectGrid">
+                        {% for subject in subjects %}
+                        <div class="col-md-6 subject-grid-item" data-name="{{ subject.name|lower }}" data-code="{{ subject.subject_code|lower }}">
+                            <a href="{% url 'academics:subject_detail' subject.id %}"
+                               class="card border student-subject-card text-decoration-none h-100">
+                                <div class="card-body p-3.5 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex align-items-start gap-3 mb-2">
+                                            <div class="subject-icon-box">
+                                                {% if 'math' in subject.name|lower %}📐
+                                                {% elif 'physics' in subject.name|lower %}⚛️
+                                                {% elif 'cs' in subject.subject_code|lower or 'cse' in subject.subject_code|lower %}💻
+                                                {% elif 'db' in subject.name|lower or 'sql' in subject.name|lower %}🗄️
+                                                {% elif 'os' in subject.name|lower or 'operating' in subject.name|lower %}⚙️
+                                                {% elif 'network' in subject.name|lower or 'cn' in subject.name|lower %}🌐
+                                                {% elif 'ml' in subject.name|lower or 'machine' in subject.name|lower %}🤖
+                                                {% else %}📘{% endif %}
+                                            </div>
+                                            <div class="min-w-0">
+                                                <h6 class="fw-bold mb-1 text-dark text-truncate" style="font-size: 1rem;">
+                                                    {{ subject.name }}
+                                                </h6>
+                                                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                    <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.72rem;">
+                                                        {{ subject.subject_code }}
+                                                    </span>
+                                                    <span class="badge bg-light text-muted border" style="font-size: 0.72rem;">
+                                                        {{ subject.credits }} Credits
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-top d-flex align-items-center justify-content-between mt-2">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold" style="font-size: 0.75rem;">
+                                            <i class="fas fa-cubes me-1"></i>{{ subject.units.count }} Units
+                                        </span>
+                                        <span class="text-primary small fw-semibold">
+                                            Open <i class="fas fa-arrow-right ms-1"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- No Results Notice -->
+                    <div id="noSubjectsFound" class="text-center py-4 d-none">
+                        <i class="fas fa-search text-muted fs-3 mb-2"></i>
+                        <p class="text-muted small mb-0">No subjects matching your filter.</p>
+                    </div>
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="display-1 mb-3">📚</div>
+                        <h6 class="fw-bold text-dark mb-1">No subjects loaded yet.</h6>
+                        <p class="text-muted small mb-3">Complete your academic profile to load your branch subjects.</p>
+                        <a href="{% url 'accounts:setup_profile' %}" class="btn btn-primary px-3 py-2 fw-semibold">
+                            Complete Your Profile →
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ RIGHT: Sidebar ═══ -->
+        <div class="col-lg-4">
+
+            <!-- AI Chatbot Promo Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3 promo-feature-card bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="promo-icon-badge bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-robot"></i>
+                        </span>
+                        <h6 class="fw-bold text-dark mb-0">Ask AI Anything</h6>
+                    </div>
+                    <p class="small text-muted mb-3" style="line-height: 1.55;">
+                        Your syllabus-aware AI tutor. Ask about any topic, get exam-ready answers.
+                    </p>
+                    <a href="{% url 'chatbot:home' %}" class="btn btn-primary btn-sm fw-semibold w-100 py-2">
+                        Start Chatting <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Question Scanner Promo Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3 promo-feature-card bg-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="promo-icon-badge bg-success bg-opacity-10 text-success">
+                            <i class="fas fa-camera"></i>
+                        </span>
+                        <h6 class="fw-bold text-dark mb-0">Scan Any Question</h6>
+                    </div>
+                    <p class="small text-muted mb-3" style="line-height: 1.55;">
+                        Upload a photo of any question — get step-by-step AI solution instantly.
+                    </p>
+                    <a href="{% url 'question_solver:home' %}" class="btn btn-success btn-sm fw-semibold w-100 py-2">
+                        Try Scanner <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Chats -->
+            {% if recent_chats %}
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-header bg-white border-bottom pt-3 pb-2 px-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark d-flex align-items-center" style="font-size: 0.88rem;">
+                        <i class="fas fa-history text-muted me-2"></i>Recent Chats
+                    </h6>
+                    <a href="{% url 'chatbot:home' %}" class="small text-primary text-decoration-none fw-semibold">View All</a>
+                </div>
+                <div class="card-body p-2">
+                    {% for chat in recent_chats %}
+                    <a href="{% url 'chatbot:session' chat.id %}" class="d-flex align-items-center justify-content-between p-2 rounded-3 text-decoration-none text-dark hover-light-row mb-1">
+                        <div class="d-flex align-items-center gap-2 min-w-0">
+                            <i class="fas fa-comment-dots text-primary opacity-75 fs-6"></i>
+                            <span class="small fw-semibold text-truncate">{{ chat.title }}</span>
+                        </div>
+                        <span class="text-muted small" style="font-size: 0.7rem;">{{ chat.last_activity|timesince }} ago</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════════ REAL-TIME STYLING & SCRIPT ═══════════════ -->
+<style>
+/* High-Contrast Student Avatar in Hero */
+.student-dashboard-avatar {
+    width: 68px;
+    height: 68px;
+    min-width: 68px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ffffff;
+    border: 3px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.student-dashboard-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.active-pulse-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+}
+
+/* Real-Time Status Pill */
+.realtime-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pulse-indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
+    animation: livePulse 2s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Gender Badge */
+.hero-gender-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 50px;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.hero-gender-badge.female {
+    background: #fdf2f8;
+    color: #db2777;
+    border: 1px solid #fbcfe8;
+}
+
+.hero-gender-badge.male {
+    background: #f0f9ff;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+}
+
+/* Academic Tag */
+.academic-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+}
+
+/* Hero Stat Boxes */
+.hero-stat-box {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    padding: 10px 16px;
+    min-width: 90px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.hero-stat-box:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.hero-stat-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.hero-stat-lbl {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* 4 Quick Action Tool Cards */
+.student-action-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.student-action-card:hover {
+    transform: translateY(-4px);
+    border-color: #0d6efd;
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.1);
+}
+
+.action-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.action-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.action-card-desc {
+    font-size: 0.78rem;
+    margin-top: 3px;
+}
+
+.action-card-footer {
+    font-size: 0.82rem;
+}
+
+/* Subject Search Input */
+.subject-search-wrap {
+    position: relative;
+    min-width: 200px;
+}
+
+.subject-search-wrap .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.78rem;
+}
+
+.subject-search-wrap input {
+    padding-left: 28px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.82rem;
+}
+
+.subject-search-wrap input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+/* Student Subject Cards */
+.student-subject-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px;
+    background: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.student-subject-card:hover {
+    transform: translateY(-3px);
+    border-color: #0d6efd !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    background: #fafcff;
+}
+
+.subject-icon-box {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* Promo Feature Cards */
+.promo-feature-card {
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.promo-icon-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.hover-light-row:hover {
+    background: #f1f5f9;
+}
+
+@keyframes wave {
+    0% { transform: rotate(0deg); }
+    10% { transform: rotate(14deg); }
+    20% { transform: rotate(-8deg); }
+    30% { transform: rotate(14deg); }
+    40% { transform: rotate(-4deg); }
+    50% { transform: rotate(10deg); }
+    60% { transform: rotate(0deg); }
+    100% { transform: rotate(0deg); }
+}
+</style>
+
+<!-- ═══════════════ REAL-TIME CLIENT JAVASCRIPT ═══════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Dynamic Real-Time Greeting
+    const hour = new Date().getHours();
+    const greetEl = document.getElementById('realtimeGreeting');
+    if (greetEl) {
+        if (hour < 12) {
+            greetEl.textContent = 'Good morning';
+        } else if (hour < 17) {
+            greetEl.textContent = 'Good afternoon';
+        } else {
+            greetEl.textContent = 'Good evening';
+        }
+    }
+
+    // 2. Real-Time Date Formatter
+    const dateEl = document.getElementById('realtimeDateText');
+    if (dateEl) {
+        const now = new Date();
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        dateEl.textContent = '• ' + now.toLocaleDateString(undefined, options);
+    }
+
+    // 3. Instant Real-Time Subject Search Filter
+    const filterInput = document.getElementById('subjectFilterInput');
+    const items = document.querySelectorAll('.subject-grid-item');
+    const noResults = document.getElementById('noSubjectsFound');
+
+    if (filterInput && items.length > 0) {
+        filterInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            let count = 0;
+
+            items.forEach(function(item) {
+                const name = item.getAttribute('data-name') || '';
+                const code = item.getAttribute('data-code') || '';
+                if (name.includes(query) || code.includes(query)) {
+                    item.classList.remove('d-none');
+                    count++;
+                } else {
+                    item.classList.add('d-none');
+                }
+            });
+
+            if (noResults) {
+                if (count === 0) {
+                    noResults.classList.remove('d-none');
+                } else {
+                    noResults.classList.add('d-none');
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

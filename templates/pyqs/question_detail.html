@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Question &amp; Solution — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 860px;">
+    <!-- Navigation -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <a href="{% url 'pyqs:paper_detail' question.paper.id %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to {{ question.paper.year }} Paper
+        </a>
+        <a href="{% url 'chatbot:home' %}" class="btn btn-ai btn-sm">
+            <i class="fas fa-robot me-1"></i> Explain with AI
+        </a>
+    </div>
+
+    <!-- Question Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <span class="badge bg-warning">{{ question.importance_label.0 }}</span>
+                <span class="badge surface-gray text-dark">{{ question.marks }} Marks</span>
+                <span class="badge bg-secondary font-monospace">{{ question.get_question_type_display }}</span>
+                <span class="badge bg-light text-muted">{{ question.paper.subject.name }} &bull; {{ question.paper.year }}</span>
+            </div>
+
+            <h3 class="fw-bold text-dark mb-3" style="line-height: 1.45;">
+                {{ question.question_text }}
+            </h3>
+
+            <p class="text-muted small mb-0">
+                Exam Session: {{ question.paper.get_exam_type_display }} &bull;
+                {% if question.topic %}Topic: {{ question.topic.name }}{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Solution Card -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-success d-flex align-items-center">
+                <i class="fas fa-circle-check me-2"></i> Standard Answer &amp; Solution
+            </h6>
+            <span class="badge bg-light text-muted">{{ question.marks }} Marks Scheme</span>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            {% if question.solution_text %}
+            <div class="p-4 bg-light rounded-3 border" style="line-height: 1.7; font-size: 0.95rem; white-space: pre-wrap;">{{ question.solution_text }}</div>
+            {% else %}
+            <div class="edu-empty-state my-2">
+                <div class="edu-empty-icon">
+                    <i class="fas fa-robot text-dark"></i>
+                </div>
+                <h5 class="fw-bold">No standard answer cataloged yet</h5>
+                <p class="text-muted small mb-3">
+                    Use ErVeda's AI Tutor to generate an exam-ready 10-mark answer grounded in your syllabus.
+                </p>
+                <a href="{% url 'chatbot:home' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-sparkles me-1"></i> Generate Solution with AI
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

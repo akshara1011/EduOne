@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Question Solution — ErVeda{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 860px;">
+    <!-- Navigation Bar -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <a href="{% url 'question_solver:home' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Scan Another Question
+        </a>
+        <a href="{% url 'chatbot:home' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-robot me-1"></i> Discuss in AI Chat
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-pill-icon surface-soft-mint text-success" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <h6 class="fw-bold mb-0">AI Solved Solution</h6>
+            </div>
+            <span class="text-muted small">{{ scan.created_at|date:"M d, Y • H:i" }}</span>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <!-- Scanned Image Display -->
+            {% if scan.image %}
+            <div class="text-center mb-4 p-3 bg-light rounded-3">
+                <img src="{{ scan.image.url }}" class="img-fluid rounded-3 border shadow-xs" style="max-height: 380px;" alt="Scanned Question">
+                <div class="mt-2 text-muted" style="font-size: 0.75rem;">Source Question Upload</div>
+            </div>
+            {% endif %}
+
+            {% if scan.error %}
+            <div class="alert alert-warning d-flex align-items-center mb-4">
+                <i class="fas fa-circle-exclamation me-2"></i>
+                <div>{{ scan.error }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Formatted Solution Container -->
+            <div class="p-4 bg-light rounded-3 border" style="line-height: 1.7; font-size: 0.95rem;">
+                <div id="solutionContainer" style="white-space: pre-wrap;">{{ scan.ai_solution|default:'No solution was recorded for this scan.' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

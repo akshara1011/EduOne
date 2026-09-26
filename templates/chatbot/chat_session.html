@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% block title %}{{ session.title }} — ErVeda AI Tutor{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-messages {
+    height: calc(100vh - 310px);
+    min-height: 440px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    background: #FFFFFF;
+}
+
+#typingIndicator {
+    display: none !important;
+}
+
+#typingIndicator.typing-visible {
+    display: flex !important;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--edu-text-secondary);
+    border-radius: 50%;
+    display: inline-block;
+    animation: eduTypingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes eduTypingBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 920px;">
+    <!-- Session Navigation Header -->
+    <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <div class="d-flex align-items-center gap-3 min-w-0">
+            <a href="{% url 'chatbot:home' %}" class="btn btn-secondary btn-sm" title="Back to Sessions">
+                ← All Chats
+            </a>
+            <div class="min-w-0">
+                <h5 class="fw-bold mb-0 text-truncate">{{ session.title }}</h5>
+                {% if session.subject %}
+                <span class="text-muted small">
+                    <i class="fas fa-book me-1"></i>{{ session.subject.name }}
+                </span>
+                {% else %}
+                <span class="text-muted small">General Discussion</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex-shrink-0">
+            <span class="badge bg-sage">
+                🤖 Gemini AI
+            </span>
+        </div>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <!-- Messages Area -->
+        <div class="chat-messages p-4" id="chatMessages">
+            {% for message in messages %}
+            <div class="d-flex mb-3 {% if message.role == 'user' %}justify-content-end{% else %}justify-content-start{% endif %}">
+                {% if message.role == 'assistant' %}
+                <div class="me-2 flex-shrink-0">
+                    <div class="stat-pill-icon surface-sage text-success" style="width: 34px; height: 34px; font-size: 0.95rem;">
+                        🤖
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="{% if message.role == 'user' %}chat-message-user{% else %}chat-message-ai{% endif %}">
+                    {% if message.role == 'assistant' %}
+                        {{ message.content|linebreaks }}
+                    {% else %}
+                        {{ message.content }}
+                    {% endif %}
+                    <div class="text-end mt-1">
+                        <small class="opacity-50" style="font-size: 0.68rem;">
+                            {{ message.created_at|time:"H:i" }}
+                        </small>
+                    </div>
+                </div>
+
+                {% if message.role == 'user' %}
+                <div class="ms-2 flex-shrink-0">
+                    <div class="user-avatar" style="width: 34px; height: 34px; font-size: 0.82rem;">
+                        {{ request.user.display_name|first|upper }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <!-- Attractive Empty State -->
+            <div class="text-center py-5 my-auto" id="emptyChatPlaceholder">
+                <div class="stat-pill-icon surface-sage text-success mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.5rem;">
+                    🤖
+                </div>
+                <h5 class="fw-bold mb-1">Meet your AI study companion</h5>
+                <p class="text-muted small mb-4" style="max-width: 440px; margin: 0 auto;">
+                    Ask questions, simplify difficult concepts, generate exam-ready answers and learn at your own pace.
+                </p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <button class="chat-suggestion-chip quick-q" data-q="Explain this topic simply">
+                        "Explain this topic simply" →
+                    </button>
+                    <button class="chat-suggestion-chip quick-q" data-q="Give me a 10-mark answer">
+                        "Give me a 10-mark answer" →
+                    </button>
+                    <button class="chat-suggestion-chip quick-q" data-q="Create important questions">
+                        "Create important questions" →
+                    </button>
+                    <button class="chat-suggestion-chip quick-q" data-q="Explain with an example">
+                        "Explain with an example" →
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Typing indicator -->
+            <div id="typingIndicator" class="d-flex mb-3 justify-content-start">
+                <div class="me-2 flex-shrink-0">
+                    <div class="stat-pill-icon surface-sage text-success" style="width: 34px; height: 34px; font-size: 0.95rem;">
+                        🤖
+                    </div>
+                </div>
+                <div class="chat-message-ai d-flex align-items-center gap-1 py-2 px-3">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="p-3 bg-white border-top">
+            <form id="chatForm" class="d-flex gap-2 align-items-end">
+                {% csrf_token %}
+                <div class="flex-grow-1">
+                    <textarea id="messageInput" class="form-control" placeholder="Ask questions from your syllabus... (Press Enter to send)" rows="2" style="resize: none;"></textarea>
+                </div>
+                <button type="submit" id="sendButton" class="btn btn-primary px-4 py-2" style="height: 52px;">
+                    Send →
+                </button>
+            </form>
+            <div class="text-center mt-2">
+                <span class="text-muted" style="font-size: 0.72rem;">
+                    Grounded in your technical engineering syllabus &bull; Google Gemini AI
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SEND_URL = "{% url 'chatbot:send_message' session.id %}";
+const CSRF = document.querySelector('[name=csrfmiddlewaretoken]').value;
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const typingIndicator = document.getElementById('typingIndicator');
+const chatForm = document.getElementById('chatForm');
+const sendButton = document.getElementById('sendButton');
+
+function scrollBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+scrollBottom();
+
+function showTyping() {
+    typingIndicator.classList.add('typing-visible');
+    scrollBottom();
+}
+
+function hideTyping() {
+    typingIndicator.classList.remove('typing-visible');
+}
+
+function setLoading(loading) {
+    messageInput.disabled = loading;
+    sendButton.disabled = loading;
+}
+
+// Quick suggestions
+document.querySelectorAll('.quick-q').forEach(btn => {
+    btn.addEventListener('click', function() {
+        messageInput.value = this.dataset.q;
+        chatForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+});
+
+// Check pending prompt
+const pendingPrompt = sessionStorage.getItem('pending_prompt');
+if (pendingPrompt) {
+    sessionStorage.removeItem('pending_prompt');
+    messageInput.value = pendingPrompt;
+    setTimeout(() => {
+        chatForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }, 200);
+}
+
+// Enter to send
+messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+});
+
+chatForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    const placeholder = document.getElementById('emptyChatPlaceholder');
+    if (placeholder) placeholder.remove();
+
+    appendMessage('user', message);
+    messageInput.value = '';
+    showTyping();
+    setLoading(true);
+
+    try {
+        const response = await fetch(SEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ message: message })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.answer) {
+            appendMessage('assistant', data.answer);
+        } else {
+            appendMessage('assistant', '⚠️ Sorry, I could not generate an answer. Please try again.');
+        }
+    } catch (error) {
+        console.error('ErVeda AI Error:', error);
+        appendMessage('assistant', '⚠️ Something went wrong contacting the AI service. Please try again.');
+    } finally {
+        hideTyping();
+        setLoading(false);
+        messageInput.focus();
+        scrollBottom();
+    }
+});
+
+function appendMessage(role, content) {
+    const isUser = role === 'user';
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userInitial = "{{ request.user.display_name|first|upper }}";
+
+    const html = `
+        <div class="d-flex mb-3 ${isUser ? 'justify-content-end' : 'justify-content-start'}">
+            ${!isUser ? `
+                <div class="me-2 flex-shrink-0">
+                    <div class="stat-pill-icon surface-sage text-success" style="width: 34px; height: 34px; font-size: 0.95rem;">
+                        🤖
+                    </div>
+                </div>
+            ` : ''}
+
+            <div class="${isUser ? 'chat-message-user' : 'chat-message-ai'}">
+                ${isUser ? escapeHtml(content) : formatAIResponse(content)}
+                <div class="text-end mt-1">
+                    <small class="opacity-50" style="font-size: 0.68rem;">${timeNow}</small>
+                </div>
+            </div>
+
+            ${isUser ? `
+                <div class="ms-2 flex-shrink-0">
+                    <div class="user-avatar" style="width: 34px; height: 34px; font-size: 0.82rem;">
+                        ${userInitial}
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    typingIndicator.insertAdjacentHTML('beforebegin', html);
+    scrollBottom();
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatAIResponse(text) {
+    let html = escapeHtml(text);
+    html = html.replace(/```([\s\S]*?)```/g, '<pre class="p-3 my-2 bg-dark text-white rounded-3"><code>$1</code></pre>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+    html = html.replace(/^(\d+)\.\s(.+)$/gm, '<div class="mb-1"><strong>$1.</strong> $2</div>');
+    html = html.replace(/^[-•]\s(.+)$/gm, '<div class="mb-1">&bull; $1</div>');
+    html = html.replace(/^###\s(.+)$/gm, '<h6 class="fw-bold mt-2 mb-1">$1</h6>');
+    html = html.replace(/^##\s(.+)$/gm, '<h5 class="fw-bold mt-2 mb-1">$1</h5>');
+    html = html.replace(/^#\s(.+)$/gm, '<h4 class="fw-bold mt-2 mb-1">$1</h4>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+</script>
+{% endblock %}

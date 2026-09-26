@@ -1,0 +1,164 @@
+{% extends 'admin_portal/base_admin.html' %}
+
+{% block page_title %}Students Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <!-- Top Action Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Student &amp; Staff Accounts</h1>
+            <p class="text-secondary small mb-0">Total {{ total_count }} student profiles registered on ErVeda.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_portal:student_create' %}" class="btn btn-admin-primary">
+                <i class="fas fa-plus"></i> Add New Account
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search name, username, email, college..." value="{{ query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="university" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Universities</option>
+                    {% for u in universities %}
+                        <option value="{{ u.id }}" {% if univ_id == u.id|stringformat:"s" %}selected{% endif %}>{{ u.short_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="branch" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                        <option value="{{ b.id }}" {% if branch_id == b.id|stringformat:"s" %}selected{% endif %}>{{ b.short_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                {% if query or univ_id or branch_id or status_filter %}
+                    <a href="{% url 'admin_portal:student_list' %}" class="btn btn-light border" title="Reset Filters"><i class="fas fa-rotate-left"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="admin-card">
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Student / User</th>
+                        <th>University &amp; Branch</th>
+                        <th>Academic Standing</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in page_obj %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar" style="width: 32px; height: 32px;">
+                                    {% if student.profile_photo %}
+                                        <img src="{{ student.profile_photo.url }}" alt="{{ student.display_name }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                                    {% else %}
+                                        <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary fw-bold w-100 h-100" style="font-size: 0.8rem;">
+                                            {{ student.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ student.display_name }}</div>
+                                    <div class="text-muted small">{{ student.email }} &bull; @{{ student.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark small">{{ student.university.short_name|default:"Not enrolled" }}</div>
+                            <div class="text-muted small">{{ student.branch.name|default:"No branch" }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold text-dark">
+                                {% if student.current_semester %}Sem {{ student.current_semester }}{% else %}-{% endif %}
+                                {% if student.current_year %}&bull; Year {{ student.current_year }}{% endif %}
+                            </div>
+                            <div class="text-muted small">{{ student.college_name|default:"College unlisted"|truncatechars:24 }}</div>
+                        </td>
+                        <td>
+                            {% if student.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                            {% endif %}
+                            {% if student.is_staff %}
+                                <span class="badge bg-primary-subtle text-primary">Admin/Staff</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-muted small">{{ student.created_at|date:"M d, Y" }}</span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_portal:student_detail' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="View Profile">
+                                <i class="fas fa-eye text-secondary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:student_edit' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
+                                <i class="fas fa-pen text-primary"></i>
+                            </a>
+                            <a href="{% url 'admin_portal:student_toggle_status' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="{% if student.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                {% if student.is_active %}
+                                    <i class="fas fa-ban text-warning"></i>
+                                {% else %}
+                                    <i class="fas fa-check text-success"></i>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'admin_portal:student_delete' student_id=student.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
+                                <i class="fas fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="fas fa-users-slash fs-3 d-block mb-2"></i>
+                            No students match your filter criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="p-3 border-top d-flex align-items-center justify-content-between">
+            <div class="small text-muted">
+                Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&university={{ univ_id }}&branch={{ branch_id }}">&laquo; Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}&university={{ univ_id }}&branch={{ branch_id }}">Next &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
