@@ -129,12 +129,14 @@ def subject_list(request):
 
 @login_required
 def subject_syllabus(request, subject_id):
-    """Full syllabus for a single subject."""
+    """Full syllabus for a single subject with point-wise objectives, outcomes, and books."""
     subject = get_object_or_404(Subject, id=subject_id)
     units = Unit.objects.filter(subject=subject).prefetch_related('topics')
+    syllabus = getattr(subject, 'syllabus', None)
     return render(request, 'academics/subject_syllabus.html', {
         'subject': subject,
         'units': units,
+        'syllabus': syllabus,
     })
 
 
@@ -180,3 +182,26 @@ def ajax_subjects(request):
         semester_id=semester_id, is_active=True
     ).values('id', 'name', 'subject_code')
     return JsonResponse(list(subjects), safe=False)
+
+
+def ajax_units(request):
+    """Return units for a subject or question paper."""
+    subject_id = request.GET.get('subject_id')
+    paper_id = request.GET.get('paper_id')
+    if not subject_id and paper_id:
+        from pyqs.models import QuestionPaper
+        paper = QuestionPaper.objects.filter(id=paper_id).first()
+        if paper:
+            subject_id = paper.subject_id
+    if not subject_id:
+        return JsonResponse([], safe=False)
+    units = Unit.objects.filter(subject_id=subject_id).order_by('unit_number').values('id', 'name', 'unit_number')
+    result = [{'id': u['id'], 'name': f"Unit {u['unit_number']}: {u['name']}"} for u in units]
+    return JsonResponse(result, safe=False)
+
+
+def ajax_topics(request):
+    """Return topics for a unit."""
+    unit_id = request.GET.get('unit_id')
+    topics = Topic.objects.filter(unit_id=unit_id).order_by('order').values('id', 'name')
+    return JsonResponse(list(topics), safe=False)

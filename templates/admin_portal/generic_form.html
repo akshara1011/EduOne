@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container-fluid p-0">
+    {% include 'admin_portal/components/breadcrumbs.html' %}
     <div class="row justify-content-center">
         <div class="col-lg-9 col-xl-8">
             
@@ -20,6 +21,9 @@
                 <div class="p-4">
                     <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
+                        {% if next_url %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                        {% endif %}
 
                         {% if form.non_field_errors %}
                         <div class="alert alert-danger py-2 px-3 small border-0 mb-4">
@@ -85,4 +89,112 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subjectSelect = document.getElementById('id_subject');
+    const paperSelect = document.getElementById('id_paper');
+    const unitSelect = document.getElementById('id_unit');
+    const topicSelect = document.getElementById('id_topic');
+
+    function populateDropdown(selectEl, items, placeholder) {
+        if (!selectEl) return;
+        const currentVal = selectEl.value;
+        selectEl.innerHTML = '';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = placeholder;
+        selectEl.appendChild(defaultOpt);
+
+        let hasCurrent = false;
+        items.forEach(function(item) {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.name;
+            if (String(item.id) === String(currentVal)) {
+                opt.selected = true;
+                hasCurrent = true;
+            }
+            selectEl.appendChild(opt);
+        });
+        if (!hasCurrent && currentVal) {
+            selectEl.value = '';
+        }
+    }
+
+    // Dynamic cascading: Subject -> Unit
+    if (subjectSelect && unitSelect) {
+        subjectSelect.addEventListener('change', function() {
+            const subId = this.value;
+            if (topicSelect) {
+                populateDropdown(topicSelect, [], '-- Select Topic (Optional) --');
+            }
+            if (!subId) {
+                populateDropdown(unitSelect, [], '-- Select Unit (Optional) --');
+                return;
+            }
+            unitSelect.disabled = true;
+            fetch(`/academics/ajax/units/?subject_id=${encodeURIComponent(subId)}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateDropdown(unitSelect, data, '-- Select Unit (Optional) --');
+                    unitSelect.disabled = false;
+                })
+                .catch(err => {
+                    console.error('Error loading units:', err);
+                    unitSelect.disabled = false;
+                });
+        });
+    }
+
+    // Dynamic cascading: Paper -> Unit (for PYQ Question form)
+    if (paperSelect && unitSelect) {
+        paperSelect.addEventListener('change', function() {
+            const pId = this.value;
+            if (topicSelect) {
+                populateDropdown(topicSelect, [], '-- Select Topic (Optional) --');
+            }
+            if (!pId) {
+                populateDropdown(unitSelect, [], '-- Select Unit (Optional) --');
+                return;
+            }
+            unitSelect.disabled = true;
+            fetch(`/academics/ajax/units/?paper_id=${encodeURIComponent(pId)}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateDropdown(unitSelect, data, '-- Select Unit (Optional) --');
+                    unitSelect.disabled = false;
+                })
+                .catch(err => {
+                    console.error('Error loading units for paper:', err);
+                    unitSelect.disabled = false;
+                });
+        });
+    }
+
+    // Dynamic cascading: Unit -> Topic
+    if (unitSelect && topicSelect) {
+        unitSelect.addEventListener('change', function() {
+            const uId = this.value;
+            if (!uId) {
+                populateDropdown(topicSelect, [], '-- Select Topic (Optional) --');
+                return;
+            }
+            topicSelect.disabled = true;
+            fetch(`/academics/ajax/topics/?unit_id=${encodeURIComponent(uId)}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateDropdown(topicSelect, data, '-- Select Topic (Optional) --');
+                    topicSelect.disabled = false;
+                })
+                .catch(err => {
+                    console.error('Error loading topics:', err);
+                    topicSelect.disabled = false;
+                });
+        });
+    }
+});
+</script>
 {% endblock %}

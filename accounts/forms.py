@@ -58,41 +58,41 @@ class StudentRegistrationForm(UserCreationForm):
 
 
 class AcademicProfileForm(forms.ModelForm):
-    """Step 2: Academic info form after registration."""
+    """Step 2: Academic info form for student setup and profile editing."""
 
     class Meta:
         model = Student
         fields = ['university', 'regulation', 'branch', 'current_year',
-                  'current_semester', 'college_name', 'phone_number', 'gender']
+                  'current_semester', 'gender', 'college_name']
+        widgets = {
+            'university': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'regulation': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'branch': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'current_year': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'current_semester': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'gender': forms.Select(attrs={'class': 'form-select form-select-lg shadow-none'}),
+            'college_name': forms.TextInput(attrs={'class': 'form-control shadow-none', 'placeholder': 'e.g. JNTUH College of Engineering'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            'university',
-            Row(
-                Column('regulation', css_class='col-md-6'),
-                Column('branch', css_class='col-md-6'),
-            ),
-            Row(
-                Column('current_year', css_class='col-md-6'),
-                Column('current_semester', css_class='col-md-6'),
-            ),
-            Row(
-                Column('college_name', css_class='col-md-6'),
-                Column('gender', css_class='col-md-6'),
-            ),
-            'phone_number',
-            Submit('submit', 'Save Academic Info', css_class='btn btn-success btn-lg w-100 mt-3')
-        )
-
-        # Add empty label
+        # Add friendly empty labels
         self.fields['university'].empty_label = '-- Select University --'
         self.fields['regulation'].empty_label = '-- Select Regulation --'
-        self.fields['branch'].empty_label = '-- Select Branch --'
-        self.fields['current_year'].empty_label = '-- Select Year --'
+        self.fields['branch'].empty_label = '-- Select Engineering Branch --'
+        self.fields['current_year'].empty_label = '-- Select Year of Study --'
         self.fields['current_semester'].empty_label = '-- Select Semester --'
         self.fields['gender'].empty_label = '-- Select Gender (for avatar) --'
+
+        # Auto-select JNTUH if it's the only university
+        jntuh = University.objects.first()
+        if jntuh and not self.initial.get('university'):
+            self.initial['university'] = jntuh.id
+
+        # Auto-select R25 as recommended regulation if none selected
+        r25 = Regulation.objects.filter(name='R25').first()
+        if r25 and not self.initial.get('regulation'):
+            self.initial['regulation'] = r25.id
 
 
 class StudentLoginForm(AuthenticationForm):

@@ -1,60 +1,221 @@
 {% extends 'base.html' %}
-{% block title %}Academic Setup — ErVeda{% endblock %}
+{% load static %}
+
+{% block title %}Student Academic Profile Setup — ErVeda{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-container {
+        max-width: 680px;
+        margin: 0 auto;
+    }
+    .setup-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+    .step-node {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 8px;
+    }
+    .step-node-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+    }
+    .field-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+    .field-card:focus-within {
+        background: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .field-label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #475569;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4 p-md-5">
+    <div class="setup-container">
+        
+        <!-- Header Banner -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center p-3 bg-primary bg-opacity-10 rounded-circle text-primary mb-2" style="width: 56px; height: 56px;">
+                <i class="fas fa-graduation-cap fs-4"></i>
+            </div>
+            <h2 class="fw-bolder text-dark mb-1">Student Profile Setup</h2>
+            <p class="text-secondary small mb-0">Select your academic parameters to instantly load your official subjects &amp; syllabus</p>
+        </div>
 
-                    <div class="text-center mb-4">
-                        <div class="stat-pill-icon surface-lavender text-dark mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.25rem;">
-                            🏛️
-                        </div>
-                        <h3 class="fw-bold mb-1">Set up your academics</h3>
-                        <p class="text-muted small">
-                            ErVeda will organize your syllabus, PYQs, and recommendations based on your branch and semester.
-                        </p>
-                    </div>
+        <!-- Setup Card -->
+        <div class="setup-card p-4 p-md-5">
 
-                    <!-- Clean 3-Step Stepper -->
-                    <div class="d-flex align-items-center justify-content-between mb-4 px-2">
-                        <div class="text-center flex-fill">
-                            <div class="stat-pill-icon surface-sage text-dark mx-auto mb-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <small class="text-muted d-block" style="font-size: 0.72rem;">Account</small>
-                        </div>
-                        <div class="flex-fill" style="height: 2px; background: #e5e7eb; margin: 0 4px; margin-bottom: 16px;"></div>
-                        <div class="text-center flex-fill">
-                            <div class="stat-pill-icon bg-dark text-white mx-auto mb-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                                2
-                            </div>
-                            <small class="fw-semibold text-dark d-block" style="font-size: 0.72rem;">Academics</small>
-                        </div>
-                        <div class="flex-fill" style="height: 2px; background: #e5e7eb; margin: 0 4px; margin-bottom: 16px;"></div>
-                        <div class="text-center flex-fill">
-                            <div class="stat-pill-icon bg-light text-muted mx-auto mb-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                                3
-                            </div>
-                            <small class="text-muted d-block" style="font-size: 0.72rem;">Ready</small>
-                        </div>
-                    </div>
-
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        {% load crispy_forms_tags %}
-                        {% crispy form %}
-                    </form>
-
-                    <p class="text-center text-muted small mt-4 mb-0">
-                        <i class="fas fa-shield-halved me-1"></i>
-                        You can update your branch, year, or semester anytime in your profile settings.
-                    </p>
+            <!-- Visual Flow Breadcrumb Tree -->
+            <div class="p-3 bg-light rounded-3 border mb-4">
+                <small class="fw-bold text-uppercase text-muted d-block mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                    <i class="fas fa-sitemap text-primary me-1"></i> Academic Alignment Path
+                </small>
+                <div class="d-flex align-items-center gap-2 flex-wrap text-secondary small fw-medium">
+                    <span class="badge bg-primary text-white">University: JNTUH</span>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                    <span class="badge bg-dark text-white">Regulation: R25 / R22</span>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                    <span class="badge bg-info text-white">Branch: ECE / CSE...</span>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                    <span class="badge bg-warning text-dark">Year: 1-4</span>
+                    <i class="fas fa-chevron-right text-muted" style="font-size: 0.7rem;"></i>
+                    <span class="badge bg-success text-white">Semester: 1-8</span>
                 </div>
             </div>
+
+            <form method="post" novalidate id="academicSetupForm">
+                {% csrf_token %}
+
+                <div class="d-flex flex-column gap-3 mb-4">
+
+                    <!-- 1. UNIVERSITY -->
+                    <div class="field-card">
+                        <label class="field-label" for="{{ form.university.id_for_label }}">
+                            <i class="fas fa-building-columns text-primary"></i> 1. University
+                        </label>
+                        {{ form.university }}
+                        {% if form.university.errors %}
+                            <div class="text-danger small mt-1">{{ form.university.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 2. REGULATION -->
+                    <div class="field-card">
+                        <label class="field-label" for="{{ form.regulation.id_for_label }}">
+                            <i class="fas fa-scroll text-dark"></i> 2. Regulation
+                        </label>
+                        {{ form.regulation }}
+                        <small class="text-muted d-block mt-1">Select <strong>R25</strong> (Latest 2025/2026 Curriculum) or <strong>R22</strong></small>
+                        {% if form.regulation.errors %}
+                            <div class="text-danger small mt-1">{{ form.regulation.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 3. BRANCH -->
+                    <div class="field-card">
+                        <label class="field-label" for="{{ form.branch.id_for_label }}">
+                            <i class="fas fa-microchip text-info"></i> 3. Engineering Branch
+                        </label>
+                        {{ form.branch }}
+                        {% if form.branch.errors %}
+                            <div class="text-danger small mt-1">{{ form.branch.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 4. YEAR & SEMESTER (ROW) -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="field-card h-100">
+                                <label class="field-label" for="{{ form.current_year.id_for_label }}">
+                                    <i class="fas fa-calendar-days text-warning"></i> 4. Year of Study
+                                </label>
+                                {{ form.current_year }}
+                                {% if form.current_year.errors %}
+                                    <div class="text-danger small mt-1">{{ form.current_year.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="field-card h-100">
+                                <label class="field-label" for="{{ form.current_semester.id_for_label }}">
+                                    <i class="fas fa-book-bookmark text-success"></i> 5. Semester
+                                </label>
+                                {{ form.current_semester }}
+                                {% if form.current_semester.errors %}
+                                    <div class="text-danger small mt-1">{{ form.current_semester.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. GENDER (FOR AVATAR) & COLLEGE (OPTIONAL) -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="field-card h-100">
+                                <label class="field-label" for="{{ form.gender.id_for_label }}">
+                                    <i class="fas fa-user-circle text-primary"></i> Gender (For Avatar)
+                                </label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-card h-100">
+                                <label class="field-label" for="{{ form.college_name.id_for_label }}">
+                                    <i class="fas fa-school text-muted"></i> College Name (Optional)
+                                </label>
+                                {{ form.college_name }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                    <span>Save Profile &amp; Open My Dashboard</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
         </div>
     </div>
 </div>
+
+<!-- Smart Year -> Semester auto-selection script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearSelect = document.getElementById('{{ form.current_year.id_for_label }}');
+        const semSelect = document.getElementById('{{ form.current_semester.id_for_label }}');
+
+        if (yearSelect && semSelect) {
+            yearSelect.addEventListener('change', function() {
+                const yearVal = parseInt(this.value);
+                if (yearVal) {
+                    // Default to odd semester of that year (Year 1 -> Sem 1, Year 2 -> Sem 3, Year 3 -> Sem 5, Year 4 -> Sem 7)
+                    const suggestedSem = (yearVal - 1) * 2 + 1;
+                    if (!semSelect.value || parseInt(semSelect.value) !== suggestedSem && parseInt(semSelect.value) !== suggestedSem + 1) {
+                        semSelect.value = suggestedSem;
+                    }
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

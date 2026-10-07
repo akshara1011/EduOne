@@ -1,47 +1,262 @@
 {% extends 'admin_portal/base_admin.html' %}
 
-{% block page_title %}Academic Regulations{% endblock %}
+{% block page_title %}Regulations Management{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
     
+    <!-- Breadcrumb Navigation -->
+    {% include 'admin_portal/components/breadcrumbs.html' %}
+
+    <!-- Header Section -->
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-1">Academic Regulations &amp; Schemes</h1>
-            <p class="text-secondary small mb-0">Curriculum patterns linked to university programs (e.g. JNTUH R22, VTU 2021 Scheme).</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary px-2.5 py-1 text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">Hierarchy Root</span>
+                <h1 class="h3 fw-bold text-dark mb-0">Academic Regulations Management</h1>
+            </div>
+            <p class="text-secondary small mb-0">Select any regulation below to drill down: <strong>Regulation &rarr; Branch &rarr; Semester &rarr; Subject &rarr; Syllabus</strong>.</p>
         </div>
-        <div>
-            <a href="{% url 'admin_portal:regulation_create' %}" class="btn btn-admin-primary">
-                <i class="fas fa-plus"></i> Add Regulation
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'admin_portal:regulation_create' %}" class="btn btn-admin-primary shadow-sm">
+                <i class="fas fa-plus"></i> Add New Regulation
             </a>
         </div>
     </div>
 
+    <!-- Quick Stats Bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-number text-primary">{{ total_regs }}</div>
+                    <div class="metric-label">Regulations</div>
+                </div>
+                <div class="metric-icon-wrap bg-primary-subtle text-primary">
+                    <i class="fas fa-scroll"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-number text-success">{{ total_branches }}</div>
+                    <div class="metric-label">Active Branches</div>
+                </div>
+                <div class="metric-icon-wrap bg-success-subtle text-success">
+                    <i class="fas fa-code-branch"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-number text-info">{{ total_semesters }}</div>
+                    <div class="metric-label">Semesters Configured</div>
+                </div>
+                <div class="metric-icon-wrap bg-info-subtle text-info">
+                    <i class="fas fa-calendar-days"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-number text-warning">{{ total_subjects }}</div>
+                    <div class="metric-label">Total Subjects</div>
+                </div>
+                <div class="metric-icon-wrap bg-warning-subtle text-warning">
+                    <i class="fas fa-book"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs / Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-3 bg-white rounded border shadow-sm">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-secondary small fw-bold me-1"><i class="fas fa-filter text-primary me-1"></i> Filter by Institution:</span>
+            <a href="{% url 'admin_portal:regulation_list' %}" class="btn btn-sm {% if not selected_univ %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                All Institutions
+            </a>
+            {% for u in universities %}
+            <a href="{% url 'admin_portal:regulation_list' %}?university={{ u.id }}" class="btn btn-sm {% if selected_univ == u.id|stringformat:'s' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                {{ u.short_name }}
+                {% if u.parent_university %}
+                <small class="opacity-75">({{ u.parent_university.short_name }})</small>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        <div class="text-muted small">
+            Showing <strong>{{ regulations|length }}</strong> of {{ total_regs }} regulations
+        </div>
+    </div>
+
+    <!-- Interactive Folder-Style Cards Grid -->
+    <h2 class="h5 fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+        <i class="fas fa-folder-open text-primary"></i> Academic Curriculum Schemes
+    </h2>
+
+    <div class="row g-4 mb-5">
+        {% for reg in regulations %}
+        <div class="col-md-6 col-xl-4">
+            <div class="admin-card h-100 shadow-sm border position-relative hover-card" style="border-radius: 12px; transition: transform 0.15s ease, box-shadow 0.15s ease;">
+                <div class="p-4 d-flex flex-column h-100">
+                    
+                    <!-- Top Chip & Status -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-bold">
+                                <i class="fas fa-university me-1"></i> {{ reg.university.short_name }}
+                            </span>
+                            {% if reg.university.parent_university %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-0.5" style="font-size: 0.72rem;">
+                                <i class="fas fa-link me-1"></i> Affiliated to {{ reg.university.parent_university.short_name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if reg.is_active %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="fas fa-circle-check me-1"></i> Active
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-muted border">Inactive</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Regulation Name & Year -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-baseline gap-2">
+                            <h3 class="h3 fw-bolder text-dark mb-0">{{ reg.name }}</h3>
+                            <span class="text-secondary fw-semibold">({{ reg.year }} Scheme)</span>
+                        </div>
+                        <div class="text-muted small mt-1">
+                            {{ reg.university.name }}
+                            {% if reg.university.parent_university %}
+                            <div class="text-info small mt-0.5">
+                                <i class="fas fa-graduation-cap me-1"></i> Affiliated to {{ reg.university.parent_university.name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Hierarchy Metric Chips -->
+                    <div class="row g-2 mb-4 mt-auto">
+                        <div class="col-4">
+                            <div class="p-2 text-center rounded bg-light border">
+                                <div class="fw-bold text-dark fs-6">{{ reg.branch_count|default:"5" }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem; text-transform: uppercase;">Branches</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 text-center rounded bg-light border">
+                                <div class="fw-bold text-dark fs-6">{{ reg.sem_count }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem; text-transform: uppercase;">Semesters</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 text-center rounded bg-light border">
+                                <div class="fw-bold text-primary fs-6">{{ reg.subject_count }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem; text-transform: uppercase;">Subjects</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Action Footer -->
+                    <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto gap-2">
+                        <a href="{% url 'admin_portal:hierarchy_regulation_branches' reg_id=reg.id %}" class="btn btn-primary flex-grow-1 fw-bold d-inline-flex align-items-center justify-content-center gap-2">
+                            <span>Open Branches</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+
+                        <div class="dropdown">
+                            <button class="btn btn-light border px-2.5 py-1.5" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More Options">
+                                <i class="fas fa-ellipsis-vertical text-secondary"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin_portal:hierarchy_regulation_branches' reg_id=reg.id %}">
+                                        <i class="fas fa-folder-tree text-primary me-2"></i> Explore Branches
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin_portal:regulation_edit' pk=reg.id %}">
+                                        <i class="fas fa-pen text-secondary me-2"></i> Edit Regulation
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'admin_portal:regulation_delete' pk=reg.id %}">
+                                        <i class="fas fa-trash me-2"></i> Delete Regulation
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="admin-card p-5 text-center text-muted">
+                <i class="fas fa-scroll fs-1 text-secondary mb-3"></i>
+                <h5 class="fw-bold text-dark">No Academic Regulations Found</h5>
+                <p class="small text-muted mb-3">Create your first regulation scheme (e.g. JNTUH R22, R25) to begin structuring branches and courses.</p>
+                <a href="{% url 'admin_portal:regulation_create' %}" class="btn btn-admin-primary">
+                    <i class="fas fa-plus"></i> Add Regulation
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tabular Overview of Regulations -->
     <div class="admin-card">
+        <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-light">
+            <div class="fw-bold text-dark">
+                <i class="fas fa-list me-1 text-secondary"></i> Regulations Master List
+            </div>
+            <div class="text-muted small">Total {{ regulations|length }} schemes configured</div>
+        </div>
         <div class="table-responsive">
-            <table class="table admin-table">
+            <table class="table admin-table mb-0">
                 <thead>
                     <tr>
+                        <th>Regulation</th>
                         <th>University</th>
-                        <th>Regulation Name</th>
                         <th>Year</th>
-                        <th>Semesters Configured</th>
+                        <th>Branches</th>
+                        <th>Semesters</th>
+                        <th>Subjects</th>
                         <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th class="text-end">Manage</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for reg in regulations %}
                     <tr>
                         <td>
-                            <div class="fw-bold text-dark">{{ reg.university.short_name }}</div>
-                            <div class="text-muted small">{{ reg.university.name|truncatechars:35 }}</div>
+                            <a href="{% url 'admin_portal:hierarchy_regulation_branches' reg_id=reg.id %}" class="fw-bolder text-primary text-decoration-none fs-6 d-inline-flex align-items-center gap-1.5">
+                                <i class="fas fa-folder text-warning"></i> {{ reg.name }}
+                            </a>
                         </td>
                         <td>
-                            <span class="badge bg-secondary-subtle text-dark fs-6">{{ reg.name }}</span>
+                            <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                <span class="badge bg-light text-dark border">{{ reg.university.short_name }}</span>
+                                {% if reg.university.parent_university %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">
+                                    Affiliated to {{ reg.university.parent_university.short_name }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small mt-0.5">{{ reg.university.name|truncatechars:35 }}</div>
                         </td>
                         <td>{{ reg.year }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ reg.sem_count }} Semesters</span></td>
+                        <td><span class="badge bg-light text-dark border">{{ reg.branch_count|default:"5" }} Branches</span></td>
+                        <td><span class="badge bg-light text-dark border">{{ reg.sem_count }} Sems</span></td>
+                        <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-bold">{{ reg.subject_count }} Subjects</span></td>
                         <td>
                             {% if reg.is_active %}
                                 <span class="badge bg-success-subtle text-success">Active</span>
@@ -50,8 +265,11 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
+                            <a href="{% url 'admin_portal:hierarchy_regulation_branches' reg_id=reg.id %}" class="btn btn-sm btn-primary py-1 px-2.5" title="Explore Branches">
+                                <i class="fas fa-arrow-right"></i> Open
+                            </a>
                             <a href="{% url 'admin_portal:regulation_edit' pk=reg.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Edit">
-                                <i class="fas fa-pen text-primary"></i>
+                                <i class="fas fa-pen text-secondary"></i>
                             </a>
                             <a href="{% url 'admin_portal:regulation_delete' pk=reg.id %}" class="btn btn-sm btn-light border py-1 px-2" title="Delete">
                                 <i class="fas fa-trash text-danger"></i>
@@ -60,7 +278,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">No regulations added yet.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No regulations added yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -69,4 +287,12 @@
     </div>
 
 </div>
+
+<style>
+.hover-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+    border-color: #93c5fd !important;
+}
+</style>
 {% endblock %}

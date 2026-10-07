@@ -50,10 +50,10 @@
                                     <div class="stat-pill-icon {{ pill_surface }} text-dark flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 700;">
                                         {{ forloop.counter }}
                                     </div>
-                                    <div class="min-w-0">
-                                        <div class="fw-semibold text-truncate">{{ topic.name }}</div>
-                                        {% if topic.description %}
-                                        <div class="text-muted small text-truncate" style="font-size: 0.76rem;">{{ topic.description }}</div>
+                                    <div class="min-w-0" style="flex: 1 1 auto; word-break: break-word;">
+                                        <div class="fw-semibold text-dark" style="white-space: normal; line-height: 1.45;">{{ topic.name }}</div>
+                                        {% if topic.description and topic.description != topic.name %}
+                                        <div class="text-muted small mt-1" style="font-size: 0.76rem; white-space: normal; line-height: 1.4;">{{ topic.description }}</div>
                                         {% endif %}
                                     </div>
                                 </div>

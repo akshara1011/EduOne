@@ -16,4 +16,6 @@ urlpatterns = [
     path('ajax/branches/', views.ajax_branches, name='ajax_branches'),
     path('ajax/semesters/', views.ajax_semesters, name='ajax_semesters'),
     path('ajax/subjects/', views.ajax_subjects, name='ajax_subjects'),
+    path('ajax/units/', views.ajax_units, name='ajax_units'),
+    path('ajax/topics/', views.ajax_topics, name='ajax_topics'),
 ]

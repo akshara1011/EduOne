@@ -8,9 +8,9 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login, logout, get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 
-from academics.models import University, Regulation, Branch, Semester, Subject, Unit, Topic
+from academics.models import University, Regulation, Branch, Semester, Subject, Syllabus, Unit, Topic
 from resources.models import Note, Video
 from pyqs.models import QuestionPaper, PYQQuestion
 from quizzes.models import Quiz, QuizQuestion, QuizAttempt
@@ -19,7 +19,7 @@ from question_solver.models import ScannedQuestion
 
 from .forms import (
     AdminLoginForm, AdminStudentForm, UniversityForm, RegulationForm,
-    BranchForm, SemesterForm, SubjectForm, UnitForm, TopicForm,
+    BranchForm, SemesterForm, SubjectForm, SyllabusForm, UnitForm, TopicForm,
     NoteForm, VideoForm, QuestionPaperForm, PYQQuestionForm,
     QuizForm, QuizQuestionForm
 )
@@ -362,10 +362,38 @@ def university_delete(request, pk):
 
 @admin_required
 def regulation_list(request):
-    regulations = Regulation.objects.select_related('university').annotate(
-        sem_count=Count('semesters', distinct=True)
-    ).order_by('university__short_name', '-year')
-    return render(request, 'admin_portal/academics/regulation_list.html', {'regulations': regulations})
+    univ_id = request.GET.get('university', '').strip()
+    regulations = Regulation.objects.select_related('university', 'university__parent_university').annotate(
+        sem_count=Count('semesters', distinct=True),
+        subject_count=Count('semesters__subjects', distinct=True),
+        branch_count=Count('semesters__branch', distinct=True),
+    )
+
+    if univ_id:
+        regulations = regulations.filter(university_id=univ_id)
+
+    regulations = regulations.order_by('university__short_name', '-year')
+
+    total_regs = regulations.count()
+    total_branches = Branch.objects.filter(is_active=True).count()
+    total_semesters = Semester.objects.count()
+    total_subjects = Subject.objects.count()
+    universities = University.objects.filter(is_active=True).select_related('parent_university')
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': ''}
+    ]
+
+    return render(request, 'admin_portal/academics/regulation_list.html', {
+        'regulations': regulations,
+        'total_regs': total_regs,
+        'total_branches': total_branches,
+        'total_semesters': total_semesters,
+        'total_subjects': total_subjects,
+        'universities': universities,
+        'selected_univ': univ_id,
+        'breadcrumbs': breadcrumbs,
+    })
 
 
 @admin_required
@@ -500,10 +528,44 @@ def branch_delete(request, pk):
 
 @admin_required
 def semester_list(request):
+    regulation_id = request.GET.get('regulation', '').strip()
+    branch_id = request.GET.get('branch', '').strip()
+    query = request.GET.get('q', '').strip()
+
     semesters = Semester.objects.select_related('regulation__university', 'branch').annotate(
         subject_count=Count('subjects', distinct=True)
-    ).order_by('regulation__university__short_name', 'branch__short_name', 'semester_number')
-    return render(request, 'admin_portal/academics/semester_list.html', {'semesters': semesters})
+    )
+
+    if regulation_id:
+        semesters = semesters.filter(regulation_id=regulation_id)
+    if branch_id:
+        semesters = semesters.filter(branch_id=branch_id)
+    if query:
+        semesters = semesters.filter(
+            Q(regulation__name__icontains=query) |
+            Q(branch__name__icontains=query) |
+            Q(branch__short_name__icontains=query) |
+            Q(regulation__university__short_name__icontains=query)
+        )
+
+    semesters = semesters.order_by(
+        'regulation__university__short_name',
+        'regulation__name',
+        'branch__short_name',
+        'semester_number'
+    )
+
+    regulations = Regulation.objects.select_related('university').filter(is_active=True).order_by('university__short_name', '-year', 'name')
+    branches = Branch.objects.filter(is_active=True).order_by('name')
+
+    return render(request, 'admin_portal/academics/semester_list.html', {
+        'semesters': semesters,
+        'regulations': regulations,
+        'branches': branches,
+        'selected_regulation': regulation_id,
+        'selected_branch': branch_id,
+        'query': query,
+    })
 
 
 @admin_required
@@ -584,7 +646,9 @@ def subject_list(request):
     if sem_id:
         subjects = subjects.filter(semester_id=sem_id)
 
-    semesters = Semester.objects.select_related('regulation__university', 'branch')
+    semesters = Semester.objects.select_related('regulation__university', 'branch').order_by(
+        'regulation__university__short_name', 'regulation__name', 'branch__short_name', 'semester_number'
+    )
 
     return render(request, 'admin_portal/academics/subject_list.html', {
         'subjects': subjects,
@@ -615,13 +679,27 @@ def subject_create(request):
 
 
 @admin_required
+def subject_syllabus_redirect(request, pk):
+    """Direct shortcut from subject ID to its hierarchy syllabus page."""
+    subject = get_object_or_404(Subject.objects.select_related('semester__regulation', 'semester__branch'), pk=pk)
+    return redirect('admin_portal:hierarchy_subject_syllabus',
+                    reg_id=subject.semester.regulation.id,
+                    branch_id=subject.semester.branch.id,
+                    sem_id=subject.semester.id,
+                    sub_id=subject.id)
+
+
+@admin_required
 def subject_edit(request, pk):
     sub = get_object_or_404(Subject, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next')
     if request.method == 'POST':
         form = SubjectForm(request.POST, instance=sub)
         if form.is_valid():
             s = form.save()
             messages.success(request, f"Subject '{s.subject_code}' updated successfully.")
+            if next_url:
+                return redirect(next_url)
             return redirect('admin_portal:subject_list')
     else:
         form = SubjectForm(instance=sub)
@@ -630,24 +708,31 @@ def subject_edit(request, pk):
         'form': form,
         'title': f"Edit Subject: {sub.subject_code} - {sub.name}",
         'subtitle': 'Update credits, code, syllabus description, or parent semester.',
-        'cancel_url': 'admin_portal:subject_list',
+        'cancel_link': next_url if next_url else None,
+        'cancel_url': 'admin_portal:subject_list' if not next_url else None,
         'submit_text': 'Save Changes',
+        'next_url': next_url,
     })
 
 
 @admin_required
 def subject_delete(request, pk):
     sub = get_object_or_404(Subject, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next')
     if request.method == 'POST':
         code = sub.subject_code
         sub.delete()
         messages.success(request, f"Subject '{code}' deleted successfully.")
+        if next_url:
+            return redirect(next_url)
         return redirect('admin_portal:subject_list')
 
     return render(request, 'admin_portal/confirm_delete.html', {
         'object_name': f"Subject: {sub.subject_code} — {sub.name}",
         'warning_text': "Deleting this subject will delete all linked units, notes, videos, and question papers!",
-        'cancel_url': 'admin_portal:subject_list',
+        'cancel_link': next_url if next_url else None,
+        'cancel_url': 'admin_portal:subject_list' if not next_url else None,
+        'next_url': next_url,
     })
 
 
@@ -698,11 +783,14 @@ def unit_create(request):
 @admin_required
 def unit_edit(request, pk):
     unit = get_object_or_404(Unit, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next')
     if request.method == 'POST':
         form = UnitForm(request.POST, instance=unit)
         if form.is_valid():
             u = form.save()
             messages.success(request, f"Unit '{u}' updated successfully.")
+            if next_url:
+                return redirect(next_url)
             return redirect('admin_portal:unit_list')
     else:
         form = UnitForm(instance=unit)
@@ -711,24 +799,31 @@ def unit_edit(request, pk):
         'form': form,
         'title': f"Edit Unit: {unit.name}",
         'subtitle': f"Subject: {unit.subject.subject_code} - {unit.subject.name}",
-        'cancel_url': 'admin_portal:unit_list',
+        'cancel_link': next_url if next_url else None,
+        'cancel_url': 'admin_portal:unit_list' if not next_url else None,
         'submit_text': 'Save Changes',
+        'next_url': next_url,
     })
 
 
 @admin_required
 def unit_delete(request, pk):
     unit = get_object_or_404(Unit, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next')
     if request.method == 'POST':
         name = str(unit)
         unit.delete()
         messages.success(request, f"Unit '{name}' deleted successfully.")
+        if next_url:
+            return redirect(next_url)
         return redirect('admin_portal:unit_list')
 
     return render(request, 'admin_portal/confirm_delete.html', {
         'object_name': f"Unit: {unit.name} ({unit.subject.subject_code})",
-        'warning_text': "Deleting this unit will delete all associated topics, notes, and questions.",
-        'cancel_url': 'admin_portal:unit_list',
+        'warning_text': "Deleting this unit will delete all nested topics and linked materials.",
+        'cancel_link': next_url if next_url else None,
+        'cancel_url': 'admin_portal:unit_list' if not next_url else None,
+        'next_url': next_url,
     })
 
 
@@ -1266,6 +1361,378 @@ def quiz_question_delete(request, pk):
         'object_name': f"Quiz Question: {question.question_text[:80]}...",
         'warning_text': "This question will be removed from the quiz.",
         'cancel_link': reverse('admin_portal:quiz_question_list', kwargs={'quiz_id': quiz_id}),
+    })
+
+
+# ══════════════════════════════════════════════════════════════════
+# ACADEMIC HIERARCHY DRILL-DOWN (Regulation → Branch → Semester → Subject → Syllabus)
+# ══════════════════════════════════════════════════════════════════
+
+@admin_required
+def hierarchy_regulation_branches(request, reg_id):
+    """
+    Level 2: Regulation → Branches
+    Shows all branches belonging to the selected regulation.
+    """
+    regulation = get_object_or_404(Regulation.objects.select_related('university'), pk=reg_id)
+    
+    branches = Branch.objects.filter(
+        Q(id__in=regulation.branches.values_list('id', flat=True)) |
+        Q(semesters__regulation=regulation)
+    ).distinct().annotate(
+        sem_count=Count('semesters', filter=Q(semesters__regulation=regulation), distinct=True),
+        subject_count=Count('semesters__subjects', filter=Q(semesters__regulation=regulation), distinct=True)
+    ).order_by('name')
+
+    total_semesters = Semester.objects.filter(regulation=regulation).count()
+    total_subjects = Subject.objects.filter(semester__regulation=regulation).count()
+    all_branches = Branch.objects.filter(is_active=True).order_by('name')
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/hierarchy/regulation_branches.html', {
+        'regulation': regulation,
+        'branches': branches,
+        'all_branches': all_branches,
+        'total_semesters': total_semesters,
+        'total_subjects': total_subjects,
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_branch_add(request, reg_id):
+    """Map a branch to a regulation and auto-create standard 8 semesters if requested."""
+    regulation = get_object_or_404(Regulation, pk=reg_id)
+    if request.method == 'POST':
+        branch_id = request.POST.get('branch_id')
+        create_semesters = request.POST.get('create_semesters') == 'on'
+        
+        if branch_id:
+            branch = get_object_or_404(Branch, pk=branch_id)
+            regulation.branches.add(branch)
+            
+            if create_semesters:
+                for sem_num in range(1, 9):
+                    Semester.objects.get_or_create(
+                        regulation=regulation,
+                        branch=branch,
+                        semester_number=sem_num,
+                        defaults={'year_of_study': (sem_num + 1) // 2}
+                    )
+            messages.success(request, f"Branch '{branch.short_name}' linked to regulation {regulation.name}.")
+        return redirect('admin_portal:hierarchy_regulation_branches', reg_id=regulation.id)
+    
+    return redirect('admin_portal:hierarchy_regulation_branches', reg_id=regulation.id)
+
+
+@admin_required
+def hierarchy_branch_semesters(request, reg_id, branch_id):
+    """
+    Level 3: Branch → Semesters
+    Shows all 8 semesters (1-1 to 4-2) for the selected Regulation + Branch.
+    """
+    regulation = get_object_or_404(Regulation.objects.select_related('university'), pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+
+    semesters = Semester.objects.filter(
+        regulation=regulation,
+        branch=branch
+    ).annotate(
+        subject_count=Count('subjects', distinct=True),
+        total_credits=Sum('subjects__credits')
+    ).order_by('semester_number')
+
+    total_subjects = sum(s.subject_count for s in semesters)
+    total_credits = sum((s.total_credits or 0) for s in semesters)
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': ''},
+    ]
+
+    other_branches = regulation.get_branches().exclude(id=branch.id)
+
+    return render(request, 'admin_portal/hierarchy/branch_semesters.html', {
+        'regulation': regulation,
+        'branch': branch,
+        'semesters': semesters,
+        'total_subjects': total_subjects,
+        'total_credits': total_credits,
+        'other_branches': other_branches,
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_semester_subjects(request, reg_id, branch_id, sem_id):
+    """
+    Level 4: Semester → Subjects
+    Shows all subjects belonging to the selected semester.
+    """
+    regulation = get_object_or_404(Regulation.objects.select_related('university'), pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+
+    query = request.GET.get('q', '').strip()
+    type_filter = request.GET.get('type', '').strip()
+
+    subjects = Subject.objects.filter(semester=semester).select_related('syllabus').annotate(
+        unit_count=Count('units', distinct=True)
+    ).order_by('subject_code', 'name')
+
+    if query:
+        subjects = subjects.filter(
+            Q(name__icontains=query) | Q(subject_code__icontains=query)
+        )
+    if type_filter:
+        subjects = subjects.filter(subject_type=type_filter)
+
+    total_credits = sum(s.credits for s in subjects)
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': ''},
+    ]
+
+    sister_semesters = Semester.objects.filter(regulation=regulation, branch=branch).order_by('semester_number')
+
+    return render(request, 'admin_portal/hierarchy/semester_subjects.html', {
+        'regulation': regulation,
+        'branch': branch,
+        'semester': semester,
+        'subjects': subjects,
+        'total_credits': total_credits,
+        'query': query,
+        'type_filter': type_filter,
+        'sister_semesters': sister_semesters,
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_subject_add(request, reg_id, branch_id, sem_id):
+    """Add a subject directly under the current hierarchy semester."""
+    regulation = get_object_or_404(Regulation, pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+
+    if request.method == 'POST':
+        post_data = request.POST.copy()
+        if 'semester' not in post_data or not post_data['semester']:
+            post_data['semester'] = str(semester.id)
+        form = SubjectForm(post_data)
+        if form.is_valid():
+            subject = form.save(commit=False)
+            subject.semester = semester
+            subject.save()
+            subject.get_or_create_syllabus()
+            messages.success(request, f"Subject '{subject.subject_code} - {subject.name}' added successfully to {semester.code}.")
+            return redirect('admin_portal:hierarchy_semester_subjects', reg_id=reg_id, branch_id=branch_id, sem_id=sem_id)
+    else:
+        form = SubjectForm(initial={'semester': semester})
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': reverse('admin_portal:hierarchy_semester_subjects', args=[regulation.id, branch.id, semester.id])},
+        {'title': 'Add Subject', 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/hierarchy/subject_form.html', {
+        'form': form,
+        'regulation': regulation,
+        'branch': branch,
+        'semester': semester,
+        'title': f"Add Subject to {regulation.name} > {branch.short_name} > {semester.code}",
+        'subtitle': f"Add a new academic course to {semester.academic_year_title}.",
+        'breadcrumbs': breadcrumbs,
+        'cancel_url': reverse('admin_portal:hierarchy_semester_subjects', args=[reg_id, branch_id, sem_id]),
+    })
+
+
+@admin_required
+def hierarchy_subject_syllabus(request, reg_id, branch_id, sem_id, sub_id):
+    """
+    Level 5: Subject → Complete Syllabus
+    Displays complete syllabus:
+    - Subject Name, Code, Credits, L-T-P, Course Type
+    - Course Objectives, Course Outcomes
+    - Units 1 to 5 (with Topics and descriptions)
+    - Textbooks, Reference Books, Additional Resources
+    """
+    regulation = get_object_or_404(Regulation.objects.select_related('university'), pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+    subject = get_object_or_404(Subject, pk=sub_id, semester=semester)
+
+    syllabus = subject.get_or_create_syllabus()
+    units = subject.units.prefetch_related('topics').order_by('unit_number')
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': reverse('admin_portal:hierarchy_semester_subjects', args=[regulation.id, branch.id, semester.id])},
+        {'title': subject.name, 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/hierarchy/subject_syllabus.html', {
+        'regulation': regulation,
+        'branch': branch,
+        'semester': semester,
+        'subject': subject,
+        'syllabus': syllabus,
+        'units': units,
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_syllabus_edit(request, reg_id, branch_id, sem_id, sub_id):
+    """Edit syllabus metadata, objectives, outcomes, textbooks, references."""
+    regulation = get_object_or_404(Regulation, pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+    subject = get_object_or_404(Subject, pk=sub_id, semester=semester)
+    syllabus = subject.get_or_create_syllabus()
+
+    if request.method == 'POST':
+        form = SyllabusForm(request.POST, instance=syllabus)
+        ltp = request.POST.get('ltp', subject.ltp)
+        credits_val = request.POST.get('credits', subject.credits)
+        
+        if form.is_valid():
+            form.save()
+            subject.ltp = ltp
+            if credits_val:
+                try:
+                    subject.credits = int(credits_val)
+                except ValueError:
+                    pass
+            subject.save()
+            messages.success(request, f"Syllabus for '{subject.name}' updated successfully.")
+            return redirect('admin_portal:hierarchy_subject_syllabus', reg_id=reg_id, branch_id=branch_id, sem_id=sem_id, sub_id=sub_id)
+    else:
+        form = SyllabusForm(instance=syllabus)
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': reverse('admin_portal:hierarchy_semester_subjects', args=[regulation.id, branch.id, semester.id])},
+        {'title': subject.name, 'url': reverse('admin_portal:hierarchy_subject_syllabus', args=[reg_id, branch_id, sem_id, sub_id])},
+        {'title': 'Edit Syllabus', 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/hierarchy/syllabus_edit.html', {
+        'form': form,
+        'regulation': regulation,
+        'branch': branch,
+        'semester': semester,
+        'subject': subject,
+        'syllabus': syllabus,
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_unit_add(request, reg_id, branch_id, sem_id, sub_id):
+    """Add a unit directly to a subject's syllabus."""
+    regulation = get_object_or_404(Regulation, pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+    subject = get_object_or_404(Subject, pk=sub_id, semester=semester)
+    syllabus = subject.get_or_create_syllabus()
+
+    existing_count = subject.units.count()
+    next_unit_num = min(existing_count + 1, 5)
+
+    cancel_target = reverse('admin_portal:hierarchy_subject_syllabus', args=[reg_id, branch_id, sem_id, sub_id])
+
+    if request.method == 'POST':
+        post_data = request.POST.copy()
+        if 'subject' not in post_data or not post_data['subject']:
+            post_data['subject'] = str(subject.id)
+        form = UnitForm(post_data)
+        if form.is_valid():
+            unit = form.save(commit=False)
+            unit.subject = subject
+            unit.syllabus = syllabus
+            unit.save()
+            messages.success(request, f"Unit {unit.unit_number}: '{unit.name}' added successfully.")
+            return redirect('admin_portal:hierarchy_subject_syllabus', reg_id=reg_id, branch_id=branch_id, sem_id=sem_id, sub_id=sub_id)
+    else:
+        form = UnitForm(initial={'subject': subject, 'unit_number': next_unit_num})
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': reverse('admin_portal:hierarchy_semester_subjects', args=[regulation.id, branch.id, semester.id])},
+        {'title': subject.name, 'url': reverse('admin_portal:hierarchy_subject_syllabus', args=[reg_id, branch_id, sem_id, sub_id])},
+        {'title': f'Add Unit {next_unit_num}', 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/generic_form.html', {
+        'form': form,
+        'title': f"Add Syllabus Unit to {subject.subject_code} - {subject.name}",
+        'subtitle': f"Define unit number (1-5), chapter title, and syllabus contents.",
+        'cancel_link': cancel_target,
+        'submit_text': 'Save Unit',
+        'breadcrumbs': breadcrumbs,
+    })
+
+
+@admin_required
+def hierarchy_topic_add(request, reg_id, branch_id, sem_id, sub_id, unit_id):
+    """Add a topic to a unit directly from the syllabus."""
+    regulation = get_object_or_404(Regulation, pk=reg_id)
+    branch = get_object_or_404(Branch, pk=branch_id)
+    semester = get_object_or_404(Semester, pk=sem_id, regulation=regulation, branch=branch)
+    subject = get_object_or_404(Subject, pk=sub_id, semester=semester)
+    unit = get_object_or_404(Unit, pk=unit_id, subject=subject)
+
+    cancel_target = reverse('admin_portal:hierarchy_subject_syllabus', args=[reg_id, branch_id, sem_id, sub_id])
+
+    if request.method == 'POST':
+        post_data = request.POST.copy()
+        if 'unit' not in post_data or not post_data['unit']:
+            post_data['unit'] = str(unit.id)
+        form = TopicForm(post_data)
+        if form.is_valid():
+            topic = form.save(commit=False)
+            topic.unit = unit
+            topic.save()
+            messages.success(request, f"Topic '{topic.name}' added to Unit {unit.unit_number}.")
+            return redirect('admin_portal:hierarchy_subject_syllabus', reg_id=reg_id, branch_id=branch_id, sem_id=sem_id, sub_id=sub_id)
+    else:
+        next_order = unit.topics.count() + 1
+        form = TopicForm(initial={'unit': unit, 'order': next_order})
+
+    breadcrumbs = [
+        {'title': 'Regulations', 'url': reverse('admin_portal:regulation_list')},
+        {'title': regulation.name, 'url': reverse('admin_portal:hierarchy_regulation_branches', args=[regulation.id])},
+        {'title': branch.short_name, 'url': reverse('admin_portal:hierarchy_branch_semesters', args=[regulation.id, branch.id])},
+        {'title': semester.code, 'url': reverse('admin_portal:hierarchy_semester_subjects', args=[regulation.id, branch.id, semester.id])},
+        {'title': subject.name, 'url': reverse('admin_portal:hierarchy_subject_syllabus', args=[reg_id, branch_id, sem_id, sub_id])},
+        {'title': f'Add Topic to Unit {unit.unit_number}', 'url': ''},
+    ]
+
+    return render(request, 'admin_portal/generic_form.html', {
+        'form': form,
+        'title': f"Add Topic to Unit {unit.unit_number}: {unit.name}",
+        'subtitle': f"Course: {unit.subject.subject_code} - {unit.subject.name}",
+        'cancel_link': cancel_target,
+        'submit_text': 'Save Topic',
+        'breadcrumbs': breadcrumbs,
     })
 
 

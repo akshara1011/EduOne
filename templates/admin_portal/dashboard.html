@@ -30,11 +30,14 @@
     <!-- ═══════════════════════════════════════════════════
          TOP METRICS ROW
     ═══════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════
+         TOP METRICS ROW (CLICKABLE INTERACTIVE CARDS)
+    ═══════════════════════════════════════════════════ -->
     <div class="row g-3 mb-4">
         
         <!-- Students -->
         <div class="col-sm-6 col-xl-3">
-            <div class="metric-card">
+            <a href="{% url 'admin_portal:student_list' %}" class="metric-card d-block text-decoration-none">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="metric-label">Registered Students</span>
                     <div class="metric-icon-wrap bg-primary-subtle text-primary">
@@ -45,12 +48,12 @@
                 <div class="text-muted small">
                     <span class="text-success fw-bold">{{ active_students }} active</span> &bull; {{ staff_count }} staff
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Academic Hierarchy -->
         <div class="col-sm-6 col-xl-3">
-            <div class="metric-card">
+            <a href="{% url 'admin_portal:subject_list' %}" class="metric-card d-block text-decoration-none">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="metric-label">Curriculum Scope</span>
                     <div class="metric-icon-wrap bg-info-subtle text-info-emphasis">
@@ -61,12 +64,12 @@
                 <div class="text-muted small">
                     {{ total_universities }} Univs &bull; {{ total_branches }} Branches &bull; {{ total_units }} Units
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Resources -->
         <div class="col-sm-6 col-xl-3">
-            <div class="metric-card">
+            <a href="{% url 'admin_portal:note_list' %}" class="metric-card d-block text-decoration-none">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="metric-label">Study Materials</span>
                     <div class="metric-icon-wrap bg-success-subtle text-success">
@@ -75,14 +78,14 @@
                 </div>
                 <div class="metric-number">{{ total_notes }} <span class="fs-6 fw-normal text-muted">Notes</span></div>
                 <div class="text-muted small">
-                    <span class="text-success fw-bold">{{ approved_notes }} approved</span> &bull; {{ total_videos }} videos
+                    <span class="text-success fw-bold">{{ approved_notes }} approved</span> &bull; {{ pending_notes }} pending
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- PYQs & Quizzes -->
         <div class="col-sm-6 col-xl-3">
-            <div class="metric-card">
+            <a href="{% url 'admin_portal:paper_list' %}" class="metric-card d-block text-decoration-none">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <span class="metric-label">Examination Archives</span>
                     <div class="metric-icon-wrap bg-warning-subtle text-warning">
@@ -93,9 +96,36 @@
                 <div class="text-muted small">
                     {{ total_pyq_questions }} PYQs &bull; {{ total_quizzes }} Quizzes
                 </div>
-            </div>
+            </a>
         </div>
 
+    </div>
+
+    <!-- Quick Curriculum Shortcuts Bar -->
+    <div class="admin-card p-3 mb-4 bg-white border">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary text-white text-uppercase px-2.5 py-1 fw-bold" style="letter-spacing: 0.05em; font-size: 0.72rem;">Quick Jump</span>
+                <span class="fw-bold text-dark small">Fast Curriculum Management:</span>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'admin_portal:subject_list' %}?q=EC" class="btn btn-sm btn-outline-primary fw-semibold">
+                    <i class="fas fa-microchip me-1"></i> ECE Subjects
+                </a>
+                <a href="{% url 'admin_portal:subject_list' %}?q=CS" class="btn btn-sm btn-outline-info text-dark fw-semibold">
+                    <i class="fas fa-laptop-code me-1"></i> CSE Subjects
+                </a>
+                <a href="{% url 'admin_portal:subject_list' %}" class="btn btn-sm btn-outline-dark fw-semibold">
+                    <i class="fas fa-book me-1"></i> All 934 Subjects &amp; Syllabi
+                </a>
+                <a href="{% url 'admin_portal:unit_list' %}" class="btn btn-sm btn-outline-secondary fw-semibold">
+                    <i class="fas fa-layer-group me-1"></i> All 4,571 Units
+                </a>
+                <a href="{% url 'admin_portal:topic_list' %}" class="btn btn-sm btn-outline-secondary fw-semibold">
+                    <i class="fas fa-list-check me-1"></i> All 27,783 Topics
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════

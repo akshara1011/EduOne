@@ -22,10 +22,15 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Active Gemini models (3.5-flash is stable, active, and fast)
-DEFAULT_MODEL = "gemini-3.5-flash"
+# Active Gemini models
+DEFAULT_MODEL = "gemini-flash-lite-latest"
 GEMINI_MODEL = getattr(settings, "GEMINI_MODEL", DEFAULT_MODEL)
-FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
+FALLBACK_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.8-flash",
+    "gemini-3.5-flash",
+    "gemma-4-31b-it",
+]
 
 
 class GeminiRestClient:
@@ -39,7 +44,7 @@ class GeminiRestClient:
         contents: List[Dict[str, Any]],
         system_instruction: Optional[str] = None,
         models: Optional[List[str]] = None,
-        timeout: int = 35
+        timeout: int = 20
     ) -> Tuple[Optional[str], Optional[str]]:
         """
         Calls Gemini generateContent endpoint with automatic fallback on 503/429/timeouts.

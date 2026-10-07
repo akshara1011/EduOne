@@ -6,7 +6,7 @@
 <div class="container-fluid p-0">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-1">Academic Semesters</h1>
+            <h1 class="h3 fw-bold text-dark mb-1">Academic Semesters <span class="badge bg-secondary-subtle text-secondary fs-6 ms-2">{{ semesters|length }}</span></h1>
             <p class="text-secondary small mb-0">Semesters mapped to university regulations and engineering branches.</p>
         </div>
         <div>
@@ -14,6 +14,44 @@
                 <i class="fas fa-plus"></i> Add Semester
             </a>
         </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="admin-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0" placeholder="Search regulation, branch...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="regulation" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Regulations</option>
+                    {% for reg in regulations %}
+                        <option value="{{ reg.id }}" {% if selected_regulation == reg.id|stringformat:"s" %}selected{% endif %}>
+                            {{ reg.university.short_name }} {{ reg.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="branch" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Branches</option>
+                    {% for br in branches %}
+                        <option value="{{ br.id }}" {% if selected_branch == br.id|stringformat:"s" %}selected{% endif %}>
+                            {{ br.short_name }} — {{ br.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-admin-primary flex-grow-1">Filter</button>
+                {% if query or selected_regulation or selected_branch %}
+                    <a href="{% url 'admin_portal:semester_list' %}" class="btn btn-light border" title="Reset Filters"><i class="fas fa-rotate-left"></i></a>
+                {% endif %}
+            </div>
+        </form>
     </div>
 
     <div class="admin-card">

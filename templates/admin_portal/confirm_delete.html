@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container-fluid p-0">
+    {% include 'admin_portal/components/breadcrumbs.html' %}
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
             <div class="admin-card border-danger">
@@ -29,6 +30,9 @@
 
                     <form method="post">
                         {% csrf_token %}
+                        {% if next_url %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                        {% endif %}
                         <div class="d-flex align-items-center justify-content-end gap-2">
                             {% if cancel_link %}
                                 <a href="{{ cancel_link }}" class="btn btn-light border px-3">Cancel</a>

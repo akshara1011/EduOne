@@ -28,11 +28,22 @@ urlpatterns = [
     path('universities/<int:pk>/edit/', views.university_edit, name='university_edit'),
     path('universities/<int:pk>/delete/', views.university_delete, name='university_delete'),
 
-    # Academics: Regulations
+    # Academics: Regulations & Hierarchy Drill-down
     path('regulations/', views.regulation_list, name='regulation_list'),
     path('regulations/add/', views.regulation_create, name='regulation_create'),
     path('regulations/<int:pk>/edit/', views.regulation_edit, name='regulation_edit'),
     path('regulations/<int:pk>/delete/', views.regulation_delete, name='regulation_delete'),
+
+    # Hierarchy: Regulation → Branch → Semester → Subject → Syllabus
+    path('regulations/<int:reg_id>/branches/', views.hierarchy_regulation_branches, name='hierarchy_regulation_branches'),
+    path('regulations/<int:reg_id>/branches/add/', views.hierarchy_branch_add, name='hierarchy_branch_add'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/', views.hierarchy_branch_semesters, name='hierarchy_branch_semesters'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/', views.hierarchy_semester_subjects, name='hierarchy_semester_subjects'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/add/', views.hierarchy_subject_add, name='hierarchy_subject_add'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/<int:sub_id>/syllabus/', views.hierarchy_subject_syllabus, name='hierarchy_subject_syllabus'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/<int:sub_id>/syllabus/edit/', views.hierarchy_syllabus_edit, name='hierarchy_syllabus_edit'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/<int:sub_id>/units/add/', views.hierarchy_unit_add, name='hierarchy_unit_add'),
+    path('regulations/<int:reg_id>/branches/<int:branch_id>/semesters/<int:sem_id>/subjects/<int:sub_id>/units/<int:unit_id>/topics/add/', views.hierarchy_topic_add, name='hierarchy_topic_add'),
 
     # Academics: Branches
     path('branches/', views.branch_list, name='branch_list'),
@@ -49,6 +60,7 @@ urlpatterns = [
     # Academics: Subjects
     path('subjects/', views.subject_list, name='subject_list'),
     path('subjects/add/', views.subject_create, name='subject_create'),
+    path('subjects/<int:pk>/syllabus/', views.subject_syllabus_redirect, name='subject_syllabus_redirect'),
     path('subjects/<int:pk>/edit/', views.subject_edit, name='subject_edit'),
     path('subjects/<int:pk>/delete/', views.subject_delete, name='subject_delete'),
 

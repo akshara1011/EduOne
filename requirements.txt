@@ -16,3 +16,5 @@ pytesseract>=0.3.10
 # Utilities
 django-widget-tweaks>=1.5.0
 
+gunicorn==26.2.0
+whitenoise==6.12.0

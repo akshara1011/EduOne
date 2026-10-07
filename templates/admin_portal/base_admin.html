@@ -294,7 +294,7 @@
             <a href="{% url 'admin_portal:university_list' %}" class="admin-nav-item {% if 'university' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-university"></i> Universities
             </a>
-            <a href="{% url 'admin_portal:regulation_list' %}" class="admin-nav-item {% if 'regulation' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="{% url 'admin_portal:regulation_list' %}" class="admin-nav-item {% if 'regulation' in request.resolver_match.url_name or 'hierarchy' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-scroll"></i> Regulations
             </a>
             <a href="{% url 'admin_portal:branch_list' %}" class="admin-nav-item {% if 'branch' in request.resolver_match.url_name %}active{% endif %}">

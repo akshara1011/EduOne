@@ -37,9 +37,15 @@
                     <tr>
                         <td>
                             <span class="badge bg-primary-subtle text-primary fw-bold">{{ univ.short_name }}</span>
+                            {% if univ.parent_university %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle ms-1" style="font-size: 0.7rem;">Affiliated College</span>
+                            {% endif %}
                         </td>
                         <td>
                             <div class="fw-bold text-dark">{{ univ.name }}</div>
+                            {% if univ.parent_university %}
+                                <div class="text-secondary small"><i class="fas fa-link me-1"></i> Affiliated to {{ univ.parent_university.short_name }} ({{ univ.parent_university.name }})</div>
+                            {% endif %}
                         </td>
                         <td>{{ univ.state }}</td>
                         <td>
